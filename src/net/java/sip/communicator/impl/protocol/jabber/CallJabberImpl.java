@@ -32,7 +32,10 @@ import org.jitsi.service.neomedia.*;
 import org.jivesoftware.smack.*;
 import org.jivesoftware.smack.filter.*;
 import org.jivesoftware.smack.packet.*;
-import org.jivesoftware.smackx.packet.*;
+import org.jivesoftware.smackx.disco.packet.DiscoverInfo;
+
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.stringprep.XmppStringprepException;
 
 /**
  * A Jabber implementation of the <tt>Call</tt> abstract class encapsulating
@@ -201,7 +204,8 @@ public class CallJabberImpl
         ProtocolProviderServiceJabberImpl protocolProvider
             = getProtocolProvider();
         String jitsiVideobridge
-            = (colibri == null) ? getJitsiVideobridge() : colibri.getFrom();
+            = (colibri == null) ?
+                getJitsiVideobridge() : colibri.getFrom().toString();
 
         if ((jitsiVideobridge == null) || (jitsiVideobridge.length() == 0))
         {
@@ -311,20 +315,22 @@ public class CallJabberImpl
             contentRequest.addChannel(remoteChannelRequest);
         }
 
-        XMPPConnection connection = protocolProvider.getConnection();
-        PacketCollector packetCollector
-            = connection.createPacketCollector(
-                    new PacketIDFilter(conferenceRequest.getPacketID()));
+        Stanza response = null;
+        try
+        {
+            XMPPConnection connection = protocolProvider.getConnection();
+            conferenceRequest.setTo(JidCreate.from(jitsiVideobridge));
+            conferenceRequest.setType(IQ.Type.get);
 
-        conferenceRequest.setTo(jitsiVideobridge);
-        conferenceRequest.setType(IQ.Type.GET);
-        connection.sendPacket(conferenceRequest);
-
-        Packet response
-            = packetCollector.nextResult(
-                    SmackConfiguration.getPacketReplyTimeout());
-
-        packetCollector.cancel();
+            response = connection.createPacketCollectorAndSend(
+                conferenceRequest).nextResult();
+        }
+        catch (InterruptedException | SmackException.NotConnectedException
+                | XmppStringprepException e)
+        {
+            logger.error("Failed to send conference request", e);
+            return null;
+        }
 
         if (response == null)
         {
@@ -644,9 +650,17 @@ public class CallJabberImpl
                  * the channels.
                  */
                 conferenceRequest.setTo(colibri.getFrom());
-                conferenceRequest.setType(IQ.Type.SET);
-                getProtocolProvider().getConnection().sendPacket(
-                        conferenceRequest);
+                conferenceRequest.setType(IQ.Type.set);
+                try
+                {
+                    getProtocolProvider().getConnection().sendStanza(
+                            conferenceRequest);
+                }
+                catch (SmackException.NotConnectedException
+                    | InterruptedException e)
+                {
+                    logger.error("Failed to send conference request", e);
+                }
             }
         }
     }
@@ -703,11 +717,19 @@ public class CallJabberImpl
 
                     conferenceRequest.setID(colibri.getID());
                     conferenceRequest.setTo(colibri.getFrom());
-                    conferenceRequest.setType(IQ.Type.SET);
+                    conferenceRequest.setType(IQ.Type.set);
                     conferenceRequest.addContent(requestContent);
 
-                    getProtocolProvider().getConnection().sendPacket(
+                    try
+                    {
+                        getProtocolProvider().getConnection().sendStanza(
                             conferenceRequest);
+                    }
+                    catch (SmackException.NotConnectedException
+                        | InterruptedException e)
+                    {
+                        logger.error("Failed to send conference request", e);
+                    }
                 }
             }
         }
@@ -911,7 +933,7 @@ public class CallJabberImpl
         // Use the IQs 'from', instead of the jingle 'initiator' field,
         // because we want to make sure that following IQs are sent with the
         // correct 'to'.
-        String remoteParty = jingleIQ.getFrom();
+        String remoteParty = jingleIQ.getFrom().toString();
 
         boolean autoAnswer = false;
         CallPeerJabberImpl attendant = null;
@@ -1014,15 +1036,23 @@ public class CallJabberImpl
                         "service.gui.security.encryption.required");
             JingleIQ errResp
                 = JinglePacketFactory.createSessionTerminate(
-                        jingleIQ.getTo(),
-                        jingleIQ.getFrom(),
+                        jingleIQ.getTo().toString(),
+                        jingleIQ.getFrom().toString(),
                         jingleIQ.getSID(),
                         Reason.SECURITY_ERROR,
                         reasonText);
 
             callPeer.setState(CallPeerState.FAILED, reasonText);
-            getProtocolProvider().getConnection().sendPacket(errResp);
-
+            try
+            {
+                getProtocolProvider().getConnection().sendStanza(
+                    errResp);
+            }
+            catch (SmackException.NotConnectedException
+                | InterruptedException e)
+            {
+                logger.error("Failed to send error response", e);
+            }
             return null;
         }
 

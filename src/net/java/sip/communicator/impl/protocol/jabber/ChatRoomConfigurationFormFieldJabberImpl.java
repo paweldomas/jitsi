@@ -22,6 +22,7 @@ import java.util.*;
 import net.java.sip.communicator.service.protocol.*;
 
 import org.jivesoftware.smackx.*;
+import org.jivesoftware.smackx.xdata.*;
 
 /**
  * The Jabber protocol implementation of the

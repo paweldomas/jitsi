@@ -39,7 +39,7 @@ public interface ContactGroup
      * @return a java.util.Iterator over the <tt>ContactGroup</tt> children
      * of this group (i.e. subgroups).
      */
-    public Iterator<ContactGroup> subgroups();
+    public Iterator<? extends ContactGroup> subgroups();
 
     /**
      * Returns the number of subgroups contained by this <tt>ContactGroup</tt>.
@@ -69,7 +69,7 @@ public interface ContactGroup
      * @return a java.util.Iterator over all contacts inside this
      * <tt>ContactGroup</tt>
      */
-    public Iterator<Contact> contacts();
+    public Iterator<? extends Contact> contacts();
 
     /**
      * Returns the number of <tt>Contact</tt> members of this

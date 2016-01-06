@@ -33,7 +33,7 @@ import org.jivesoftware.smack.util.*;
  */
 public class VCardTempXUpdatePresenceExtension
     implements PacketExtension,
-               PacketInterceptor
+               PacketListener
 {
     /**
      * This presence extension element name.
@@ -184,7 +184,7 @@ public class VCardTempXUpdatePresenceExtension
      *
      * @param packet The sent presence packet.
      */
-    public void interceptPacket(Packet packet)
+    public void processPacket(Stanza packet)
     {
         packet.addExtension(this);
     }

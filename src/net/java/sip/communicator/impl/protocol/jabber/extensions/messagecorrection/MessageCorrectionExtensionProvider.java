@@ -28,7 +28,7 @@ import org.xmlpull.v1.*;
  * @author Ivan Vergiliev
  */
 public class MessageCorrectionExtensionProvider
-    implements PacketExtensionProvider
+    extends ExtensionElementProvider
 {
 
     /**

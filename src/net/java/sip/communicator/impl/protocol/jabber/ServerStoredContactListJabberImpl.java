@@ -27,8 +27,15 @@ import net.java.sip.communicator.util.*;
 import org.jivesoftware.smack.*;
 import org.jivesoftware.smack.filter.*;
 import org.jivesoftware.smack.packet.*;
+import org.jivesoftware.smack.roster.*;
+import org.jivesoftware.smack.roster.packet.*;
 import org.jivesoftware.smack.util.*;
-import org.jivesoftware.smackx.packet.*;
+
+import org.jivesoftware.smackx.nick.packet.Nick;
+import org.jxmpp.jid.*;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.stringprep.XmppStringprepException;
+import org.jxmpp.util.XmppStringUtils;
 import org.osgi.framework.*;
 
 /**
@@ -156,7 +163,7 @@ public class ServerStoredContactListJabberImpl
      *
      * @return the roster entry or <tt>null</tt> if it does not exist.
      */
-    RosterEntry getRosterEntry(String user)
+    RosterEntry getRosterEntry(BareJid user)
     {
         if(roster == null)
             return null;
@@ -233,8 +240,7 @@ public class ServerStoredContactListJabberImpl
         synchronized (serverStoredGroupListeners)
         {
             listeners
-                = new ArrayList<ServerStoredGroupListener>(
-                        serverStoredGroupListeners);
+                = new ArrayList(serverStoredGroupListeners);
         }
 
         /**
@@ -245,17 +251,26 @@ public class ServerStoredContactListJabberImpl
          */
         if(eventID == ServerStoredGroupEvent.GROUP_CREATED_EVENT)
         {
-            Iterator<Contact> iter = group.contacts();
+            Iterator<ContactJabberImpl> iter = group.contacts();
             while (iter.hasNext())
             {
-                ContactJabberImpl c = (ContactJabberImpl)iter.next();
+                ContactJabberImpl c = iter.next();
 
                 // roster can be null, receiving system messages from server
                 // before we are log in
                 if(roster != null)
                 {
-                    parentOperationSet.firePresenceStatusChanged(
-                            roster.getPresence(c.getAddress()));
+                    try
+                    {
+                        parentOperationSet.firePresenceStatusChanged(
+                                roster.getPresence(
+                                    JidCreate.bareFrom(c.getAddress())));
+                    }
+                    catch (XmppStringprepException e)
+                    {
+                        logger.error("Error creating barejid:"
+                            + c.getAddress());
+                    }
                 }
             }
         }
@@ -395,7 +410,7 @@ public class ServerStoredContactListJabberImpl
     {
         Iterator<ContactGroup> contactGroups = rootGroup.subgroups();
         ContactJabberImpl result = null;
-        String userId = StringUtils.parseBareAddress(id);
+        String userId = XmppStringUtils.parseBareJid(id);
 
         while(contactGroups.hasNext())
         {
@@ -501,16 +516,15 @@ public class ServerStoredContactListJabberImpl
             if(parent != null && parent != getRootGroup())
                 parentNames = new String[]{parent.getGroupName()};
 
-            PacketInterceptor presenceInterceptor = new PacketInterceptor()
+            StanzaListener presenceInterceptor = new StanzaListener()
             {
-
                 @Override
-                public void interceptPacket(Packet packet)
+                public void processPacket(Stanza packet)
                 {
                     Presence presence = (Presence) packet;
                     if(presence.getType() == Presence.Type.subscribe
-                        && completeID.equals(StringUtils.parseBareAddress(
-                            presence.getTo())))
+                        && completeID.equals(
+                            presence.getTo().asBareJid().toString()))
                     {
                         Nick nicknameExt
                             = new Nick(
@@ -521,20 +535,35 @@ public class ServerStoredContactListJabberImpl
                 }
             };
             jabberProvider.getConnection().addPacketInterceptor(
-                presenceInterceptor, new PacketTypeFilter(Presence.class));
+                presenceInterceptor, new StanzaTypeFilter(Presence.class));
             // modify our reply timeout because some XMPP may send "result" IQ
             // late (> 5 secondes).
-            SmackConfiguration.setPacketReplyTimeout(
+            long originalTimeout
+                = jabberProvider.getConnection().getPacketReplyTimeout();
+            jabberProvider.getConnection().setPacketReplyTimeout(
                 ProtocolProviderServiceJabberImpl.SMACK_PACKET_REPLY_TIMEOUT);
 
-            this.roster.createEntry(completeID, completeID, parentNames);
+            try
+            {
+                this.roster.createEntry(
+                    JidCreate.bareFrom(completeID), completeID, parentNames);
+            }
+            catch (SmackException.NotLoggedInException
+                | SmackException.NoResponseException
+                | SmackException.NotConnectedException
+                | InterruptedException
+                | XmppStringprepException e)
+            {
+                e.printStackTrace();
+            }
 
-            SmackConfiguration.setPacketReplyTimeout(5000);
+            jabberProvider.getConnection()
+                .setPacketReplyTimeout(originalTimeout);
 
             jabberProvider.getConnection().removePacketInterceptor(
                 presenceInterceptor);
         }
-        catch (XMPPException ex)
+        catch (XMPPException.XMPPErrorException ex)
         {
             String errTxt = "Error adding new jabber entry";
             logger.error(errTxt, ex);
@@ -544,12 +573,12 @@ public class ServerStoredContactListJabberImpl
             XMPPError err = ex.getXMPPError();
             if(err != null)
             {
-                if(err.getCode() > 400 && err.getCode() < 500)
+                if(err.getType() == XMPPError.Type.AUTH)
                     errorCode = OperationFailedException.FORBIDDEN;
-                else if(err.getCode() > 500)
+                else if(err.getType() == XMPPError.Type.CANCEL)
                     errorCode = OperationFailedException.INTERNAL_SERVER_ERROR;
 
-                errTxt = err.getCondition();
+                errTxt = err.getCondition().toString();
             }
 
             throw new OperationFailedException(errTxt, errorCode, ex);
@@ -742,8 +771,8 @@ public class ServerStoredContactListJabberImpl
             // first copy the item that will be removed
             // when iterating over group contacts and removing them
             // concurrent exception occures
-            Vector<Contact> localCopy = new Vector<Contact>();
-            Iterator<Contact> iter = groupToRemove.contacts();
+            List<ContactJabberImpl> localCopy = new ArrayList<>();
+            Iterator<ContactJabberImpl> iter = groupToRemove.contacts();
 
             while (iter.hasNext())
             {
@@ -753,12 +782,16 @@ public class ServerStoredContactListJabberImpl
             iter = localCopy.iterator();
             while (iter.hasNext())
             {
-                ContactJabberImpl item = (ContactJabberImpl) iter.next();
+                ContactJabberImpl item = iter.next();
                 if(item.isPersistent())
                     roster.removeEntry(item.getSourceEntry());
             }
         }
-        catch (XMPPException ex)
+        catch (XMPPException
+            | InterruptedException
+            | SmackException.NotLoggedInException
+            | SmackException.NoResponseException
+            | SmackException.NotConnectedException ex)
         {
             logger.error("Error removing group", ex);
             throw new OperationFailedException(
@@ -787,22 +820,32 @@ public class ServerStoredContactListJabberImpl
             if (entry != null)//don't try to remove non-existing contacts.
                 this.roster.removeEntry(entry);
         }
-        catch (XMPPException ex)
+        catch (XMPPException.XMPPErrorException
+            | InterruptedException
+            | SmackException.NotLoggedInException
+            | SmackException.NoResponseException
+            | SmackException.NotConnectedException ex)
+
         {
             String errTxt = "Error removing contact";
             logger.error(errTxt, ex);
 
             int errorCode = OperationFailedException.INTERNAL_ERROR;
 
-            XMPPError err = ex.getXMPPError();
-            if(err != null)
+            if(ex instanceof XMPPException.XMPPErrorException)
             {
-                if(err.getCode() > 400 && err.getCode() < 500)
-                    errorCode = OperationFailedException.FORBIDDEN;
-                else if(err.getCode() > 500)
-                    errorCode = OperationFailedException.INTERNAL_SERVER_ERROR;
+                XMPPError err
+                    = ((XMPPException.XMPPErrorException)ex).getXMPPError();
+                if (err != null)
+                {
+                    if (err.getType() == XMPPError.Type.AUTH)
+                        errorCode = OperationFailedException.FORBIDDEN;
+                    else if (err.getType() == XMPPError.Type.CANCEL)
+                        errorCode =
+                            OperationFailedException.INTERNAL_SERVER_ERROR;
 
-                errTxt = err.getCondition();
+                    errTxt = err.getCondition().toString();
+                }
             }
 
             throw new OperationFailedException(errTxt, errorCode, ex);
@@ -817,8 +860,19 @@ public class ServerStoredContactListJabberImpl
      */
     public void renameGroup(ContactGroupJabberImpl groupToRename, String newName)
     {
-        groupToRename.getSourceGroup().setName(newName);
-        groupToRename.setNameCopy(newName);
+        try
+        {
+            groupToRename.getSourceGroup().setName(newName);
+            groupToRename.setNameCopy(newName);
+        }
+        catch (XMPPException.XMPPErrorException
+            | InterruptedException
+            | SmackException.NoResponseException
+            | SmackException.NotConnectedException ex)
+
+        {
+            logger.error("Renaming group", ex);
+        }
     }
 
     /**
@@ -867,16 +921,23 @@ public class ServerStoredContactListJabberImpl
             // from other groups if any
             // modify our reply timeout because some XMPP may send "result" IQ
             // late (> 5 secondes).
-            SmackConfiguration.setPacketReplyTimeout(
+            long originalTimeout
+                = getParentProvider().getConnection().getPacketReplyTimeout();
+            getParentProvider().getConnection().setPacketReplyTimeout(
                 ProtocolProviderServiceJabberImpl.SMACK_PACKET_REPLY_TIMEOUT);
-            roster.createEntry(contact.getSourceEntry().getUser(),
+            roster.createEntry(contact.getJid(),
                                contact.getDisplayName(),
                                new String[]{newParent.getGroupName()});
-            SmackConfiguration.setPacketReplyTimeout(5000);
+            getParentProvider().getConnection()
+                .setPacketReplyTimeout(originalTimeout);
 
             newParent.addContact(contact);
         }
-        catch (XMPPException ex)
+        catch (XMPPException.XMPPErrorException
+            | InterruptedException
+            | SmackException.NoResponseException
+            | SmackException.NotLoggedInException
+            | SmackException.NotConnectedException ex)
         {
             logger.error("Cannot move contact! ", ex);
             throw new OperationFailedException(
@@ -893,7 +954,7 @@ public class ServerStoredContactListJabberImpl
     void init(OperationSetPersistentPresenceJabberImpl.ContactChangesListener
                   presenceChangeListener)
     {
-        this.roster = jabberProvider.getConnection().getRoster();
+        this.roster = Roster.getInstanceFor(jabberProvider.getConnection());
         presenceChangeListener.storeEvents();
         this.roster.addRosterListener(presenceChangeListener);
         this.roster.setSubscriptionMode(Roster.SubscriptionMode.manual);
@@ -921,22 +982,24 @@ public class ServerStoredContactListJabberImpl
      */
     void sendInitialStatus()
     {
-        // if we have initial status saved use it
-        if(initialStatus != null)
+        try
         {
-            try
+            // if we have initial status saved use it
+            if(initialStatus != null)
             {
                 parentOperationSet.publishPresenceStatus(
                     initialStatus, initialStatusMessage);
             }
-            catch(OperationFailedException ex)
-            {
-                logger.error("Error publishing initial presence", ex);
-            }
+            else
+                getParentProvider().getConnection()
+                    .sendStanza(new Presence(Presence.Type.available));
         }
-        else
-            getParentProvider().getConnection()
-                .sendPacket(new Presence(Presence.Type.available));
+        catch(OperationFailedException
+            | InterruptedException
+            | SmackException.NotConnectedException ex)
+        {
+            logger.error("Error publishing initial presence", ex);
+        }
 
         // clean
         initialStatus = null;
@@ -1035,7 +1098,7 @@ public class ServerStoredContactListJabberImpl
                     // cause we add our listener after roster is received
                     // and smack don't allow to add our listener earlier
                     parentOperationSet.firePresenceStatusChanged(
-                        roster.getPresence(item.getUser()));
+                        roster.getPresence(item.getJid()));
                 }
                 catch(Throwable t)
                 {
@@ -1098,11 +1161,10 @@ public class ServerStoredContactListJabberImpl
                 groupsToRemove.add(group);
             }
 
-            Iterator<Contact> iterContacts = group.contacts();
+            Iterator<ContactJabberImpl> iterContacts = group.contacts();
             while(iterContacts.hasNext())
             {
-                ContactJabberImpl contact =
-                    (ContactJabberImpl)iterContacts.next();
+                ContactJabberImpl contact = iterContacts.next();
                 if(!contact.isResolved())
                 {
                     contactsToRemove.add(contact);
@@ -1148,12 +1210,11 @@ public class ServerStoredContactListJabberImpl
                 // we must check & dispatch it
                 if(roster != null)
                 {
-                    Iterator<Contact> cIter = newGroup.contacts();
+                    Iterator<ContactJabberImpl> cIter = newGroup.contacts();
                     while(cIter.hasNext())
                     {
-                        String address = cIter.next().getAddress();
                         parentOperationSet.firePresenceStatusChanged(
-                            roster.getPresence(address));
+                            roster.getPresence(cIter.next().getJid()));
                     }
                 }
             }
@@ -1205,7 +1266,7 @@ public class ServerStoredContactListJabberImpl
         if(roster != null)
         {
             parentOperationSet.firePresenceStatusChanged(
-                    roster.getPresence(contact.getAddress()));
+                    roster.getPresence(contact.getJid()));
         }
 
         // dispatch
@@ -1235,7 +1296,7 @@ public class ServerStoredContactListJabberImpl
         if(roster != null)
         {
             parentOperationSet.firePresenceStatusChanged(
-                    roster.getPresence(contact.getAddress()));
+                    roster.getPresence(contact.getJid()));
         }
 
         // dispatch
@@ -1280,6 +1341,7 @@ public class ServerStoredContactListJabberImpl
      */
     static boolean isEntryDisplayable(RosterEntry entry)
     {
+        logger.info("aaaa " + entry + "/"+ entry.getType() + "/" + entry.toString());
         if(entry.getType() == RosterPacket.ItemType.both
            || entry.getType() == RosterPacket.ItemType.to)
         {
@@ -1287,8 +1349,7 @@ public class ServerStoredContactListJabberImpl
         }
         else if((entry.getType() == RosterPacket.ItemType.none
                     || entry.getType() == RosterPacket.ItemType.from)
-                && (RosterPacket.ItemStatus.SUBSCRIPTION_PENDING.equals(
-                    entry.getStatus())
+                && (entry.isSubscriptionPending()
                     || (entry.getGroups() != null
                         && entry.getGroups().size() > 0)))
         {
@@ -1356,22 +1417,22 @@ public class ServerStoredContactListJabberImpl
          * @param error the error.
          * @param packet the source packet containing the error.
          */
-        public void rosterError(XMPPError error, Packet packet)
+        public void rosterError(XMPPError error, Stanza packet)
         {
-            logger.error("Error received in roster " + error.getCode() + " "
-                + error.getMessage());
+            logger.error("Error received in roster " + error.getType() + " "
+                + error.getConditionText());
         }
 
         /**
          * Received event when entry is added to the server stored list
          * @param addresses Collection
          */
-        public void entriesAdded(Collection<String> addresses)
+        public void entriesAdded(Collection<Jid> addresses)
         {
             if (logger.isTraceEnabled())
                 logger.trace("entriesAdded " + addresses);
 
-            for (String id : addresses)
+            for (Jid id : addresses)
             {
                 addEntryToContactList(id);
             }
@@ -1388,30 +1449,36 @@ public class ServerStoredContactListJabberImpl
          * @param rosterEntryID the entry id.
          * @return the newly created contact.
          */
-        private ContactJabberImpl addEntryToContactList(String rosterEntryID)
+        private ContactJabberImpl addEntryToContactList(Jid rosterEntryID)
         {
-            RosterEntry entry = roster.getEntry(rosterEntryID);
-
+            RosterEntry entry = roster.getEntry(rosterEntryID.asBareJid());
+            logger.info("00000");
             if(!isEntryDisplayable(entry))
+            {
+                logger.info("0000-1111");
                 return null;
-
+            }
             ContactJabberImpl contact =
                 findContactById(entry.getUser());
 
             if(contact == null)
             {
-                contact = findPrivateContactByRealId(entry.getUser());
+                logger.info("111111111");
+                contact = findPrivateContactByRealId(entry.getJid());
             }
 
             if(contact != null)
             {
+                logger.info("22222");
                 if(contact.isPersistent())
                 {
+                    logger.info("33333");
                     contact.setResolved(entry);
                     return contact;
                 }
                 else if(contact instanceof VolatileContactJabberImpl)
                 {
+                    logger.info("44444");
                     ContactGroup oldParentGroup =
                         contact.getParentContactGroup();
                     // if contact is in 'not in contact list'
@@ -1426,11 +1493,15 @@ public class ServerStoredContactListJabberImpl
                             .removeContact(contact);
                         fireContactRemoved(oldParentGroup, contact);
                     }
+                    logger.info("5555");
                 }
                 else
+                {
+                    logger.info("66666");
                     return contact;
+                }
             }
-
+            logger.info("7777");
             contact = new ContactJabberImpl(
                     entry,
                     ServerStoredContactListJabberImpl.this,
@@ -1439,13 +1510,14 @@ public class ServerStoredContactListJabberImpl
 
             if(entry.getGroups() == null || entry.getGroups().size() == 0)
             {
+                logger.info("88888");
                 // no parent group so its in the root group
                 rootGroup.addContact(contact);
                 fireContactAdded(rootGroup, contact);
 
                 return contact;
             }
-
+            logger.info("99999");
             for (RosterGroup group : entry.getGroups())
             {
                 ContactGroupJabberImpl parentGroup =
@@ -1484,13 +1556,13 @@ public class ServerStoredContactListJabberImpl
          * @param id the jabber id.
          * @return the contact or null if the contact is not found.
          */
-        private ContactJabberImpl findPrivateContactByRealId(String id)
+        private ContactJabberImpl findPrivateContactByRealId(Jid id)
         {
             ContactGroupJabberImpl volatileGroup
                 = getNonPersistentGroup();
             if(volatileGroup == null)
                 return null;
-            Iterator<Contact> it = volatileGroup.contacts();
+            Iterator<ContactJabberImpl> it = volatileGroup.contacts();
             while(it.hasNext())
             {
                 Contact contact = it.next();
@@ -1499,7 +1571,7 @@ public class ServerStoredContactListJabberImpl
                     continue;
 
                 if(contact.getPersistableAddress().equals(
-                    StringUtils.parseBareAddress(id)))
+                    id.asBareJid().toString()))
                 {
                     return (ContactJabberImpl) contact;
                 }
@@ -1512,15 +1584,15 @@ public class ServerStoredContactListJabberImpl
          * or have been added to a new group or removed from one
          * @param addresses Collection
          */
-        public void entriesUpdated(Collection<String> addresses)
+        public void entriesUpdated(Collection<Jid> addresses)
         {
             if (logger.isTraceEnabled())
                 logger.trace("entriesUpdated  " + addresses);
 
             // will search for group renamed
-            for (String contactID : addresses)
+            for (Jid contactID : addresses)
             {
-                RosterEntry entry = roster.getEntry(contactID);
+                RosterEntry entry = roster.getEntry(contactID.asBareJid());
 
                 ContactJabberImpl contact = addEntryToContactList(contactID);
 
@@ -1672,16 +1744,17 @@ public class ServerStoredContactListJabberImpl
          * Event received when entry has been removed from the list
          * @param addresses Collection
          */
-        public void entriesDeleted(Collection<String> addresses)
+        public void entriesDeleted(Collection<Jid> addresses)
         {
-            Iterator<String> iter = addresses.iterator();
+            Iterator<Jid> iter = addresses.iterator();
             while (iter.hasNext())
             {
-                String address = iter.next();
+                Jid address = iter.next();
                 if (logger.isTraceEnabled())
                     logger.trace("entry deleted " + address);
 
-                ContactJabberImpl contact = findContactById(address);
+                ContactJabberImpl contact
+                    = findContactById(address.asBareJid().toString());
 
                 if(contact == null)
                 {
@@ -1974,7 +2047,15 @@ public class ServerStoredContactListJabberImpl
      */
     public Iterator<Presence> getPresences(String user)
     {
-        return roster.getPresences(user);
+        try
+        {
+            return roster.getPresences(JidCreate.bareFrom(user)).iterator();
+        }
+        catch (XmppStringprepException e)
+        {
+            logger.error("Error parsing to barejid:" + user);
+            return Collections.EMPTY_LIST.iterator();
+        }
     }
 
     /**

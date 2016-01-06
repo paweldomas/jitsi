@@ -34,7 +34,7 @@ import java.util.*;
  * @author Pawel Domas
  */
 public class RayoIqProvider
-    implements IQProvider
+    extends IQProvider
 {
     /**
      * Rayo namespace.

@@ -77,7 +77,7 @@ public class ForwardedPacketExtension
      * Parses the forwarded XML element.
      */
     public static class Provider
-        implements PacketExtensionProvider
+        extends ExtensionElementProvider
     {
         /**
          * Creates a <tt>ForwardedPacketExtension</tt> by parsing

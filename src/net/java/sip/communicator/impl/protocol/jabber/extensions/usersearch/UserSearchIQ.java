@@ -21,8 +21,10 @@ import java.util.*;
 
 import org.jivesoftware.smack.packet.*;
 import org.jivesoftware.smack.util.*;
-import org.jivesoftware.smackx.*;
-import org.jivesoftware.smackx.packet.*;
+import org.jivesoftware.smackx.search.*;
+import org.jivesoftware.smackx.xdata.*;
+import org.jivesoftware.smackx.xdata.packet.*;
+
 
 /**
  * Implements the <tt>IQ</tt> packets for user search (XEP-0055)

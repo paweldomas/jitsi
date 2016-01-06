@@ -24,7 +24,7 @@ import net.java.sip.communicator.util.*;
 
 import org.jivesoftware.smack.*;
 import org.jivesoftware.smack.packet.*;
-import org.jivesoftware.smackx.packet.*;
+import org.jivesoftware.smackx.disco.packet.*;
 
 /**
  * An implementation of the <tt>CallPeer</tt> abstract class for the common part

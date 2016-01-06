@@ -24,8 +24,8 @@ import org.jivesoftware.smack.packet.*;
 import org.jivesoftware.smack.provider.*;
 import org.jivesoftware.smackx.*;
 import org.jivesoftware.smackx.bytestreams.ibb.provider.*;
-import org.jivesoftware.smackx.packet.*;
-import org.jivesoftware.smackx.provider.*;
+
+//import org.jivesoftware.smackx.provider.*;
 
 /**
  * Our Provider Manager that loads providers and extensions we use.
@@ -35,7 +35,7 @@ import org.jivesoftware.smackx.provider.*;
  * @author Damian Minkov
  */
 public class ProviderManagerExt
-    extends ProviderManager
+//    extends ProviderManager
 {
     /**
      * Logger of this class
@@ -65,115 +65,115 @@ public class ProviderManagerExt
         //    org.jivesoftware.smackx.packet.Time.class);
 
         //<!-- Roster Exchange -->
-        addExtProvider("x", "jabber:x:roster",
-            RosterExchangeProvider.class);
-        //<!-- Message Events -->
-        addExtProvider("x", "jabber:x:event",
-            MessageEventProvider.class);
-
-        //<!-- Chat State -->
-        addExtProvider(
-            "active",
-            "http://jabber.org/protocol/chatstates",
-            ChatStateExtension.Provider.class);
-        addExtProvider(
-            "composing",
-            "http://jabber.org/protocol/chatstates",
-            ChatStateExtension.Provider.class);
-        addExtProvider(
-            "paused",
-            "http://jabber.org/protocol/chatstates",
-            ChatStateExtension.Provider.class);
-        addExtProvider(
-            "inactive",
-            "http://jabber.org/protocol/chatstates",
-            ChatStateExtension.Provider.class);
-        addExtProvider(
-            "gone",
-            "http://jabber.org/protocol/chatstates",
-            ChatStateExtension.Provider.class);
-
-
-        //<!-- XHTML -->
-        addExtProvider("html", "http://jabber.org/protocol/xhtml-im",
-            XHTMLExtensionProvider.class);
-
-        //<!-- Group Chat Invitations -->
-        addExtProvider("x", "jabber:x:conference",
-            GroupChatInvitation.Provider.class);
-
-        //<!-- Service Discovery # Items -->
-        addProvider("query", "http://jabber.org/protocol/disco#items",
-            DiscoverItemsProvider.class);
-        //<!-- Service Discovery # Info -->
-        addProvider("query", "http://jabber.org/protocol/disco#info",
-            DiscoverInfoProvider.class);
-
-        //<!-- Data Forms-->
-        addExtProvider("x", "jabber:x:data",
-            org.jivesoftware.smackx.provider.DataFormProvider.class);
-
-        //<!-- MUC User -->
-        addExtProvider("x", "http://jabber.org/protocol/muc#user",
-            MUCUserProvider.class);
-        //<!-- MUC Admin -->
-        addProvider("query", "http://jabber.org/protocol/muc#admin",
-            MUCAdminProvider.class);
-        //<!-- MUC Owner -->
-        addProvider("query", "http://jabber.org/protocol/muc#owner",
-            MUCOwnerProvider.class);
-
-        //<!-- Delayed Delivery -->
-        addExtProvider("x", "jabber:x:delay",
-            DelayInformationProvider.class);
-        addExtProvider("delay", "urn:xmpp:delay",
-            DelayInfoProvider.class);
-
-        //<!-- Version -->
-        addProvider("query", "jabber:iq:version",
-            Version.class);
-
-        //<!-- VCard -->
-        addProvider("vCard", "vcard-temp",
-            VCardProvider.class);
-
-        //<!-- Offline Message Requests -->
-        addProvider("offline", "http://jabber.org/protocol/offline",
-            OfflineMessageRequest.Provider.class);
-
-        //<!-- Offline Message Indicator -->
-        addExtProvider("offline", "http://jabber.org/protocol/offline",
-            OfflineMessageInfo.Provider.class);
-
-        //<!-- Last Activity -->
-        addProvider("query", "jabber:iq:last",
-            LastActivity.class);
-
-        //<!-- User Search -->
-        addProvider("query", "jabber:iq:search",UserSearchProvider.class);
-
-        //<!-- SharedGroupsInfo -->
-        //addProvider("sharedgroup", "http://www.jivesoftware.org/protocol/sharedgroup",
-        //    org.jivesoftware.smackx.packet.SharedGroupsInfo.Provider.class);
-
-
-        //<!-- JEP-33: Extended Stanza Addressing -->
-        //addProvider("addresses", "http://jabber.org/protocol/address",
-        //    org.jivesoftware.smackx.provider.MultipleAddressesProvider.class);
-
-        //<!-- FileTransfer -->
-        addProvider("si", "http://jabber.org/protocol/si",
-            StreamInitiationProvider.class);
-        addProvider("query", "http://jabber.org/protocol/bytestreams",
-            org.jivesoftware.smackx.bytestreams.socks5.provider.BytestreamsProvider.class);
-        addProvider("open", "http://jabber.org/protocol/ibb",
-            OpenIQProvider.class);
-        addProvider("data", "http://jabber.org/protocol/ibb",
-            DataPacketProvider.class);
-        addProvider("close", "http://jabber.org/protocol/ibb",
-            CloseIQProvider.class);
-        addExtProvider("data", "http://jabber.org/protocol/ibb",
-            DataPacketProvider.class);
+//        addExtProvider("x", "jabber:x:roster",
+//            RosterExchangeProvider.class);
+//        //<!-- Message Events -->
+//        addExtProvider("x", "jabber:x:event",
+//            MessageEventProvider.class);
+//
+//        //<!-- Chat State -->
+//        addExtProvider(
+//            "active",
+//            "http://jabber.org/protocol/chatstates",
+//            ChatStateExtension.Provider.class);
+//        addExtProvider(
+//            "composing",
+//            "http://jabber.org/protocol/chatstates",
+//            ChatStateExtension.Provider.class);
+//        addExtProvider(
+//            "paused",
+//            "http://jabber.org/protocol/chatstates",
+//            ChatStateExtension.Provider.class);
+//        addExtProvider(
+//            "inactive",
+//            "http://jabber.org/protocol/chatstates",
+//            ChatStateExtension.Provider.class);
+//        addExtProvider(
+//            "gone",
+//            "http://jabber.org/protocol/chatstates",
+//            ChatStateExtension.Provider.class);
+//
+//
+//        //<!-- XHTML -->
+//        addExtProvider("html", "http://jabber.org/protocol/xhtml-im",
+//            XHTMLExtensionProvider.class);
+//
+//        //<!-- Group Chat Invitations -->
+//        addExtProvider("x", "jabber:x:conference",
+//            GroupChatInvitation.Provider.class);
+//
+//        //<!-- Service Discovery # Items -->
+//        addProvider("query", "http://jabber.org/protocol/disco#items",
+//            DiscoverItemsProvider.class);
+//        //<!-- Service Discovery # Info -->
+//        addProvider("query", "http://jabber.org/protocol/disco#info",
+//            DiscoverInfoProvider.class);
+//
+//        //<!-- Data Forms-->
+//        addExtProvider("x", "jabber:x:data",
+//            org.jivesoftware.smackx.provider.DataFormProvider.class);
+//
+//        //<!-- MUC User -->
+//        addExtProvider("x", "http://jabber.org/protocol/muc#user",
+//            MUCUserProvider.class);
+//        //<!-- MUC Admin -->
+//        addProvider("query", "http://jabber.org/protocol/muc#admin",
+//            MUCAdminProvider.class);
+//        //<!-- MUC Owner -->
+//        addProvider("query", "http://jabber.org/protocol/muc#owner",
+//            MUCOwnerProvider.class);
+//
+//        //<!-- Delayed Delivery -->
+//        addExtProvider("x", "jabber:x:delay",
+//            DelayInformationProvider.class);
+//        addExtProvider("delay", "urn:xmpp:delay",
+//            DelayInfoProvider.class);
+//
+//        //<!-- Version -->
+//        addProvider("query", "jabber:iq:version",
+//            Version.class);
+//
+//        //<!-- VCard -->
+//        addProvider("vCard", "vcard-temp",
+//            VCardProvider.class);
+//
+//        //<!-- Offline Message Requests -->
+//        addProvider("offline", "http://jabber.org/protocol/offline",
+//            OfflineMessageRequest.Provider.class);
+//
+//        //<!-- Offline Message Indicator -->
+//        addExtProvider("offline", "http://jabber.org/protocol/offline",
+//            OfflineMessageInfo.Provider.class);
+//
+//        //<!-- Last Activity -->
+//        addProvider("query", "jabber:iq:last",
+//            LastActivity.class);
+//
+//        //<!-- User Search -->
+//        addProvider("query", "jabber:iq:search",UserSearchProvider.class);
+//
+//        //<!-- SharedGroupsInfo -->
+//        //addProvider("sharedgroup", "http://www.jivesoftware.org/protocol/sharedgroup",
+//        //    org.jivesoftware.smackx.packet.SharedGroupsInfo.Provider.class);
+//
+//
+//        //<!-- JEP-33: Extended Stanza Addressing -->
+//        //addProvider("addresses", "http://jabber.org/protocol/address",
+//        //    org.jivesoftware.smackx.provider.MultipleAddressesProvider.class);
+//
+//        //<!-- FileTransfer -->
+//        addProvider("si", "http://jabber.org/protocol/si",
+//            StreamInitiationProvider.class);
+//        addProvider("query", "http://jabber.org/protocol/bytestreams",
+//            org.jivesoftware.smackx.bytestreams.socks5.provider.BytestreamsProvider.class);
+//        addProvider("open", "http://jabber.org/protocol/ibb",
+//            OpenIQProvider.class);
+//        addProvider("data", "http://jabber.org/protocol/ibb",
+//            DataPacketProvider.class);
+//        addProvider("close", "http://jabber.org/protocol/ibb",
+//            CloseIQProvider.class);
+//        addExtProvider("data", "http://jabber.org/protocol/ibb",
+//            DataPacketProvider.class);
 
 
         //<!-- Privacy -->
@@ -413,11 +413,11 @@ public class ProviderManagerExt
             // Add the provider to the map.
             if (IQProvider.class.isAssignableFrom(provider))
             {
-                addIQProvider(elementName, namespace, provider.newInstance());
+//                addIQProvider(elementName, namespace, provider.newInstance());
             }
             else if (IQ.class.isAssignableFrom(provider))
             {
-                addIQProvider(elementName, namespace, provider);
+//                addIQProvider(elementName, namespace, provider);
             }
         }
         catch (Throwable t)
@@ -448,18 +448,18 @@ public class ProviderManagerExt
         try
         {
             // Add the provider to the map.
-            if (PacketExtensionProvider.class.isAssignableFrom(provider))
-            {
-                addExtensionProvider(
-                        elementName,
-                        namespace,
-                        provider.newInstance());
-            }
-            else if (PacketExtension.class.isAssignableFrom(
-                    provider))
-            {
-                addExtensionProvider(elementName, namespace, provider);
-            }
+//            if (PacketExtensionProvider.class.isAssignableFrom(provider))
+//            {
+//                addExtensionProvider(
+//                        elementName,
+//                        namespace,
+//                        provider.newInstance());
+//            }
+//            else if (PacketExtension.class.isAssignableFrom(
+//                    provider))
+//            {
+//                addExtensionProvider(elementName, namespace, provider);
+//            }
         }
         catch (Throwable t)
         {

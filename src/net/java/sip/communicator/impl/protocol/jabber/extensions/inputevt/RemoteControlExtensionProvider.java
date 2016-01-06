@@ -31,7 +31,7 @@ import org.xmlpull.v1.*;
  * @author Sebastien Vincent
  */
 public class RemoteControlExtensionProvider
-    implements PacketExtensionProvider
+    extends ExtensionElementProvider
 {
     /**
      * The name of the remote-info XML element <tt>remote-control</tt>.

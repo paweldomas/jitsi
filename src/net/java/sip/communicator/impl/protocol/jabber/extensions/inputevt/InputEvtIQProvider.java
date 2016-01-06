@@ -27,7 +27,7 @@ import org.xmlpull.v1.*;
  * @author Sebastien Vincent
  */
 public class InputEvtIQProvider
-    implements IQProvider
+    extends IQProvider
 {
     /**
      * Parse the Input IQ sub-document and returns the corresponding

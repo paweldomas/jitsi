@@ -30,7 +30,11 @@ import org.jivesoftware.smack.packet.*;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.util.*;
 import org.jivesoftware.smackx.*;
-import org.jivesoftware.smackx.packet.*;
+import org.jivesoftware.smackx.chatstates.*;
+import org.jivesoftware.smackx.chatstates.packet.*;
+import org.jivesoftware.smackx.xevent.*;
+import org.jxmpp.util.*;
+
 
 /**
  * Maps SIP Communicator typing notifications to those going and coming from
@@ -363,7 +367,7 @@ public class OperationSetTypingNotificationsJabberImpl
 
         public void composingNotification(String from, String packetID)
         {
-            String fromID = StringUtils.parseBareAddress(from);
+            String fromID = XmppStringUtils.parseBareAddress(from);
 
             Contact sourceContact = opSetPersPresence.findContactByID(fromID);
 

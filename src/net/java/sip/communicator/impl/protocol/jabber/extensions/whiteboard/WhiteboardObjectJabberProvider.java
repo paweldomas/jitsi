@@ -29,7 +29,7 @@ import org.xmlpull.v1.*;
  * @author Julien Waechter
  */
 public class WhiteboardObjectJabberProvider
-    implements PacketExtensionProvider
+    extends ExtensionElementProvider
 {
     /**
      * Creates a new WhiteboardObjectJabberProvider.

@@ -24,7 +24,12 @@ import net.java.sip.communicator.service.protocol.*;
 import net.java.sip.communicator.service.protocol.event.*;
 import net.java.sip.communicator.service.protocol.jabberconstants.*;
 
+import net.java.sip.communicator.util.Logger;
 import org.jivesoftware.smack.*;
+import org.jivesoftware.smack.roster.RosterEntry;
+import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.stringprep.XmppStringprepException;
 
 /**
  * The Jabber implementation of the service.protocol.Contact interface.
@@ -36,9 +41,16 @@ public class ContactJabberImpl
     extends AbstractContact
 {
     /**
+     * The logger.
+     */
+    private static final Logger logger =
+        Logger.getLogger(ContactJabberImpl.class);
+
+
+    /**
      * The jid of the user entry in roster.
      */
-    private String jid = null;
+    private BareJid jid = null;
 
     /**
      * The image of the contact.
@@ -116,7 +128,7 @@ public class ContactJabberImpl
         // rosterEntry can be null when creating volatile contact
         if(rosterEntry != null)
         {
-            this.jid = rosterEntry.getUser();
+            this.jid = rosterEntry.getJid();
             this.serverDisplayName = rosterEntry.getName();
         }
 
@@ -158,9 +170,18 @@ public class ContactJabberImpl
     public String getAddress()
     {
         if(isResolved)
-            return this.jid;
+            return this.jid.toString();
         else
             return tempId;
+    }
+
+    /**
+     * Returns the Jabber Userid of this contact
+     * @return the Jabber Userid of this contact
+     */
+    public BareJid getJid()
+    {
+        return this.jid;
     }
 
     /**
@@ -417,7 +438,7 @@ public class ContactJabberImpl
 
         this.isResolved = true;
         this.isPersistent = true;
-        this.jid = entry.getUser();
+        this.jid = entry.getJid();
         this.serverDisplayName = entry.getName();
     }
 
@@ -545,7 +566,14 @@ public class ContactJabberImpl
      */
     protected void setJid(String fullJid)
     {
-        this.jid = fullJid;
+        try
+        {
+            this.jid = JidCreate.bareFrom(fullJid);
+        }
+        catch (XmppStringprepException e)
+        {
+            logger.error("Error creating barejid:" + fullJid);
+        }
 
         if (resources == null)
             resources

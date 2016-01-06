@@ -30,7 +30,7 @@ import org.xmlpull.v1.*;
  * @author Pawel Domas
  */
 public class HealthCheckIQProvider
-    implements IQProvider
+    extends IQProvider
 {
     /**
      * Registers <tt>HealthCheckIQProvider</tt> as an <tt>IQProvider</tt>

@@ -29,7 +29,7 @@ import org.xmlpull.v1.*;
  * Parses {@link JibriIq}.
  */
 public class JibriIqProvider
-    implements IQProvider
+    extends IQProvider
 {
     /**
      * {@inheritDoc}

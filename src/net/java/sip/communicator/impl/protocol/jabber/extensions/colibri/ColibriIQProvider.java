@@ -35,7 +35,7 @@ import org.xmlpull.v1.*;
  * @author Boris Grozev
  */
 public class ColibriIQProvider
-    implements IQProvider
+    extends IQProvider
 {
 
     /**
@@ -73,7 +73,7 @@ public class ColibriIQProvider
                 new DefaultPacketExtensionProvider<SourceGroupPacketExtension>(
                         SourceGroupPacketExtension.class));
 
-        PacketExtensionProvider parameterProvider
+        ExtensionElementProvider parameterProvider
                 = new DefaultPacketExtensionProvider<ParameterPacketExtension>(
                 ParameterPacketExtension.class);
 
@@ -95,7 +95,7 @@ public class ColibriIQProvider
                 ShutdownIQ.NAMESPACE,
                 this);
         // Shutdown extension
-        PacketExtensionProvider shutdownProvider
+        ExtensionElementProvider shutdownProvider
                 = new DefaultPacketExtensionProvider
                 <ColibriConferenceIQ.GracefulShutdown>(
                 ColibriConferenceIQ.GracefulShutdown.class);
@@ -112,7 +112,7 @@ public class ColibriIQProvider
                 this);
 
         // ColibriStatsExtension
-        PacketExtensionProvider statsProvider
+        ExtensionElementProvider statsProvider
                 = new DefaultPacketExtensionProvider<ColibriStatsExtension>(
                 ColibriStatsExtension.class);
 
@@ -121,7 +121,7 @@ public class ColibriIQProvider
                 ColibriStatsExtension.NAMESPACE,
                 statsProvider);
         // ColibriStatsExtension.Stat
-        PacketExtensionProvider statProvider
+        ExtensionElementProvider statProvider
                 = new DefaultPacketExtensionProvider
                 <ColibriStatsExtension.Stat>(
                 ColibriStatsExtension.Stat.class);
@@ -211,7 +211,7 @@ public class ColibriIQProvider
             String namespace)
         throws Exception
     {
-        PacketExtensionProvider extensionProvider
+        ExtensionElementProvider extensionProvider
             = smackInteroperabilityLayer.getExtensionProvider(
                         name,
                         namespace);

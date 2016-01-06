@@ -28,7 +28,7 @@ import net.java.sip.communicator.service.protocol.event.*;
 import org.jivesoftware.smack.*;
 import org.jivesoftware.smack.filter.*;
 import org.jivesoftware.smack.packet.*;
-import org.jivesoftware.smackx.packet.*;
+
 // disambiguation
 
 /**

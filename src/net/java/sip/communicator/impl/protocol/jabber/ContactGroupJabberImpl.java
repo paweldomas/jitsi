@@ -21,7 +21,7 @@ import java.util.*;
 
 import net.java.sip.communicator.service.protocol.*;
 
-import org.jivesoftware.smack.*;
+import org.jivesoftware.smack.roster.*;
 
 /**
  * The Jabber implementation of the ContactGroup interface. Instances of this class
@@ -49,7 +49,8 @@ public class ContactGroupJabberImpl
      * lower case  strings in the left column because JIDs in XMPP are not case
      * sensitive.
      */
-    private Map<String, Contact> buddies = new Hashtable<String, Contact>();
+    private Map<String, ContactJabberImpl> buddies
+        = new Hashtable<String, ContactJabberImpl>();
 
     /**
      * Whether or not this contact group has been resolved against
@@ -67,7 +68,7 @@ public class ContactGroupJabberImpl
      * a list that would always remain empty. We only use it so that we're able
      * to extract empty iterators
      */
-    private List<ContactGroup> dummyGroupsList = new LinkedList<ContactGroup>();
+    private List<ContactGroupJabberImpl> dummyGroupsList = new LinkedList<>();
 
     /**
      * A variable that we use as a means of detecting changes in the name
@@ -201,7 +202,7 @@ public class ContactGroupJabberImpl
      *   <tt>ContactGroup</tt>. In case the group doesn't contain any
      * members it will return an empty iterator.
      */
-    public Iterator<Contact> contacts()
+    public Iterator<ContactJabberImpl> contacts()
     {
         return buddies.values().iterator();
     }
@@ -271,7 +272,7 @@ public class ContactGroupJabberImpl
      *
      * @return an empty iterator
      */
-    public Iterator<ContactGroup> subgroups()
+    public Iterator<ContactGroupJabberImpl> subgroups()
     {
         return dummyGroupsList.iterator();
     }
@@ -352,7 +353,7 @@ public class ContactGroupJabberImpl
             .append(countContacts())
             .append(":[");
 
-        Iterator<Contact> contacts = contacts();
+        Iterator<ContactJabberImpl> contacts = contacts();
         while (contacts.hasNext())
         {
             Contact contact = contacts.next();
@@ -375,7 +376,7 @@ public class ContactGroupJabberImpl
     {
         if(id == null)
             return null;
-        return (ContactJabberImpl)buddies.get(id.toLowerCase());
+        return buddies.get(id.toLowerCase());
     }
 
     /**

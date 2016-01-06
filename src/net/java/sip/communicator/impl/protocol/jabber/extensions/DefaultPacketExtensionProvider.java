@@ -32,7 +32,7 @@ import org.xmlpull.v1.*;
  * @author Emil Ivov
  */
 public class DefaultPacketExtensionProvider<C extends AbstractPacketExtension>
-    implements PacketExtensionProvider
+    extends ExtensionElementProvider
 {
     /**
      * The <tt>Logger</tt> used by the <tt>DefaultPacketExtensionProvider</tt>
@@ -108,7 +108,7 @@ public class DefaultPacketExtensionProvider<C extends AbstractPacketExtension>
 
             if (eventType == XmlPullParser.START_TAG)
             {
-                PacketExtensionProvider provider = smackInteroperabilityLayer
+                ExtensionElementProvider provider = smackInteroperabilityLayer
                         .getExtensionProvider( elementName, namespace );
 
                 if(provider == null)

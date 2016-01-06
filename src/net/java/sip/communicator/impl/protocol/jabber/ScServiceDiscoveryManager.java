@@ -28,8 +28,11 @@ import org.jivesoftware.smack.*;
 import org.jivesoftware.smack.filter.*;
 import org.jivesoftware.smack.packet.*;
 import org.jivesoftware.smack.util.*;
-import org.jivesoftware.smackx.*;
-import org.jivesoftware.smackx.packet.*;
+import org.jivesoftware.smackx.disco.*;
+import org.jivesoftware.smackx.disco.packet.*;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.stringprep.XmppStringprepException;
+import org.jxmpp.util.XmppStringUtils;
 
 /**
  * An wrapper to smack's default {@link ServiceDiscoveryManager} that adds
@@ -41,8 +44,8 @@ import org.jivesoftware.smackx.packet.*;
  * @author Lubomir Marinov
  */
 public class ScServiceDiscoveryManager
-    implements PacketInterceptor,
-               NodeInformationProvider
+    extends AbstractNodeInformationProvider
+    implements StanzaListener
 {
     /**
      * The <tt>Logger</tt> used by the <tt>ScServiceDiscoveryManager</tt>
@@ -112,6 +115,11 @@ public class ScServiceDiscoveryManager
     private DiscoveryInfoRetriever retriever = new DiscoveryInfoRetriever();
 
     /**
+     * The default identity.
+     */
+    private static DiscoverInfo.Identity defaultIdentity;
+
+    /**
      * Creates a new <tt>ScServiceDiscoveryManager</tt> wrapping the default
      * discovery manager of the specified <tt>connection</tt>.
      *
@@ -133,10 +141,13 @@ public class ScServiceDiscoveryManager
             XMPPConnection connection,
             String[] featuresToRemove,
             String[] featuresToAdd,
-            boolean cacheNonCaps)
+            boolean cacheNonCaps,
+            DiscoverInfo.Identity defaultIdentity
+        )
     {
         this.parentProvider = parentProvider;
         this.connection = connection;
+        this.defaultIdentity = defaultIdentity;
 
         this.discoveryManager
             = ServiceDiscoveryManager.getInstanceFor(connection);
@@ -147,13 +158,7 @@ public class ScServiceDiscoveryManager
 
         this.cacheNonCaps = cacheNonCaps;
 
-        DiscoverInfo.Identity identity
-            = new DiscoverInfo.Identity(
-                    "client",
-                    ServiceDiscoveryManager.getIdentityName());
-
-        identity.setType(ServiceDiscoveryManager.getIdentityType());
-        identities.add(identity);
+        identities.add(defaultIdentity);
 
         //add support for capabilities
         discoveryManager.addFeature(CapsPacketExtension.NAMESPACE);
@@ -254,7 +259,7 @@ public class ScServiceDiscoveryManager
     {
         DiscoverInfo di = new DiscoverInfo();
 
-        di.setType(IQ.Type.RESULT);
+        di.setType(IQ.Type.result);
         di.setNode(capsManager.getNode() + "#" + getEntityCapsVersion());
 
         // Add discover info
@@ -283,13 +288,7 @@ public class ScServiceDiscoveryManager
     private void addDiscoverInfoTo(DiscoverInfo response)
     {
         // Set this client identity
-        DiscoverInfo.Identity identity
-            = new DiscoverInfo.Identity(
-                    "client",
-                    ServiceDiscoveryManager.getIdentityName());
-
-        identity.setType(ServiceDiscoveryManager.getIdentityType());
-        response.addIdentity(identity);
+        response.addIdentity(this.defaultIdentity);
 
         // Add the registered features to the response
 
@@ -395,7 +394,7 @@ public class ScServiceDiscoveryManager
      * @param packet the (hopefully presence) packet we need to add a "c"
      * element to.
      */
-    public void interceptPacket(Packet packet)
+    public void processPacket(Stanza packet)
     {
         if ((packet instanceof Presence) && (capsManager != null))
         {
@@ -429,8 +428,8 @@ public class ScServiceDiscoveryManager
 
     /**
      * Returns a list of the Items
-     * {@link org.jivesoftware.smackx.packet.DiscoverItems.Item} defined in the
-     * node or in other words <tt>null</tt> since we don't support any.
+     * {@link org.jivesoftware.smackx.disco.packet.DiscoverItems.Item} defined
+     * in the node or in other words <tt>null</tt> since we don't support any.
      *
      * @return always <tt>null</tt> since we don't support items.
      */
@@ -469,7 +468,8 @@ public class ScServiceDiscoveryManager
      */
     private void initFeatures()
     {
-        Iterator<String> defaultFeatures = discoveryManager.getFeatures();
+        Iterator<String> defaultFeatures
+            = discoveryManager.getFeatures().iterator();
 
         synchronized (features)
         {
@@ -583,7 +583,20 @@ public class ScServiceDiscoveryManager
     public DiscoverInfo discoverInfo(String entityID, String node)
         throws XMPPException
     {
-        return discoveryManager.discoverInfo(entityID, node);
+        try
+        {
+            return discoveryManager.discoverInfo(
+                JidCreate.from(entityID), node);
+        }
+        catch (SmackException.NoResponseException
+            | SmackException.NotConnectedException
+            | InterruptedException
+            | XmppStringprepException e)
+        {
+            logger.error("Error parsing: " + entityID, e);
+        }
+
+        return null;
     }
 
     /**
@@ -597,7 +610,19 @@ public class ScServiceDiscoveryManager
      */
     public DiscoverItems discoverItems(String entityID) throws XMPPException
     {
-        return discoveryManager.discoverItems(entityID);
+        try
+        {
+            return discoveryManager.discoverItems(JidCreate.from(entityID));
+        }
+        catch (SmackException.NoResponseException
+                | SmackException.NotConnectedException
+                | InterruptedException
+                | XmppStringprepException e)
+        {
+            logger.error("Error parsing: " + entityID, e);
+        }
+
+        return null;
     }
 
     /**
@@ -615,7 +640,20 @@ public class ScServiceDiscoveryManager
     public DiscoverItems discoverItems(String entityID, String node)
         throws XMPPException
     {
-        return discoveryManager.discoverItems(entityID, node);
+        try
+        {
+            return discoveryManager.discoverItems(
+                JidCreate.from(entityID), node);
+        }
+        catch (SmackException.NoResponseException
+            | SmackException.NotConnectedException
+            | InterruptedException
+            | XmppStringprepException e)
+        {
+            logger.error("Error parsing: " + entityID, e);
+        }
+
+        return null;
     }
 
     /**
@@ -795,7 +833,7 @@ public class ScServiceDiscoveryManager
                     capabilitiesOpSet.fireContactCapabilitiesChanged(
                         entityID,
                         capsManager.getFullJidsByBareJid(
-                            StringUtils.parseBareAddress(entityID))
+                            XmppStringUtils.parseBareJid(entityID))
                         );
                 }
             }

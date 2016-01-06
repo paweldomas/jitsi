@@ -28,7 +28,7 @@ import org.jivesoftware.smack.filter.*;
 import org.jivesoftware.smack.packet.*;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.filetransfer.*;
-import org.jivesoftware.smackx.packet.*;
+
 
 /**
  * The Jabber protocol extension of the <tt>AbstractFileTransfer</tt>.
@@ -37,7 +37,7 @@ import org.jivesoftware.smackx.packet.*;
  */
 public class OutgoingFileTransferJabberImpl
     extends AbstractFileTransfer
-    implements PacketInterceptor
+    implements PacketListener
 {
     /**
      * The logger of this class.
@@ -181,7 +181,7 @@ public class OutgoingFileTransferJabberImpl
      *
      * @see PacketInterceptor#interceptPacket(Packet)
      */
-    public void interceptPacket(Packet packet)
+    public void processPacket(Stanza packet)
     {
         if (!(packet instanceof StreamInitiation))
             return;

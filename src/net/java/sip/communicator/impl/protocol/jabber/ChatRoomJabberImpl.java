@@ -34,7 +34,8 @@ import org.jivesoftware.smack.packet.*;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.*;
 import org.jivesoftware.smackx.muc.*;
-import org.jivesoftware.smackx.packet.*;
+import org.jivesoftware.smackx.muc.packet.*;
+
 
 /**
  * Implements chat rooms for jabber. The class encapsulates instances of the
@@ -3027,7 +3028,7 @@ public class ChatRoomJabberImpl
      * <tt>ConferenceAnnouncementPacketExtension</tt>.
      */
     private class PresenceInterceptor
-            implements PacketInterceptor
+            implements PacketListener
     {
         /**
          * {@inheritDoc}
@@ -3036,7 +3037,7 @@ public class ChatRoomJabberImpl
          * <tt>ConferenceAnnouncementPacketExtension</tt> of <tt>packet</tt>.
          */
         @Override
-        public void interceptPacket(Packet packet)
+        public void processPacket(Stanza packet)
         {
             if (packet instanceof Presence)
             {

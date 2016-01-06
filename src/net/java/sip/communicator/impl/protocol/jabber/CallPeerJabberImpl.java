@@ -31,8 +31,9 @@ import org.jitsi.service.neomedia.*;
 import org.jivesoftware.smack.*;
 import org.jivesoftware.smack.filter.*;
 import org.jivesoftware.smack.packet.*;
+import org.jivesoftware.smack.roster.*;
 import org.jivesoftware.smack.util.*;
-import org.jivesoftware.smackx.packet.*;
+
 
 /**
  * Implements a Jabber <tt>CallPeer</tt>.
@@ -158,8 +159,8 @@ public class CallPeerJabberImpl
             String reasonText = "Error: " + exc.getMessage();
             JingleIQ errResp
                 = JinglePacketFactory.createSessionTerminate(
-                        sessionInitIQ.getTo(),
-                        sessionInitIQ.getFrom(),
+                        sessionInitIQ.getTo().toString(),
+                        sessionInitIQ.getFrom().toString(),
                         sessionInitIQ.getSID(),
                         Reason.FAILED_APPLICATION,
                         reasonText);

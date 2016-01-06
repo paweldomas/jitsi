@@ -22,25 +22,71 @@
       <artifactId>commons-lang3</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.igniterealtime.smack</groupId>
-      <artifactId>smack</artifactId>
+      <groupId>org.jxmpp</groupId>
+      <artifactId>jxmpp-core</artifactId>
+      <version>0.5.0-alpha7</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jxmpp</groupId>
+      <artifactId>jxmpp-jid</artifactId>
+      <version>0.5.0-alpha7</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jxmpp</groupId>
+      <artifactId>jxmpp-util-cache</artifactId>
+      <version>0.5.0-alpha7</version>
     </dependency>
     <dependency>
       <groupId>org.igniterealtime.smack</groupId>
-      <artifactId>smackx</artifactId>
+      <artifactId>smack-core</artifactId>
+      <version>4.2.0-beta3</version>
     </dependency>
+    <!-- not sure if required -->
+    <dependency>
+      <groupId>org.igniterealtime.smack</groupId>
+      <artifactId>smack-debug</artifactId>
+      <version>4.2.0-beta3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.igniterealtime.smack</groupId>
+      <artifactId>smack-extensions</artifactId>
+      <version>4.2.0-beta3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.igniterealtime.smack</groupId>
+      <artifactId>smack-im</artifactId>
+      <version>4.2.0-beta3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.igniterealtime.smack</groupId>
+      <artifactId>smack-java7</artifactId>
+      <version>4.2.0-beta3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.igniterealtime.smack</groupId>
+      <artifactId>smack-legacy</artifactId>
+      <version>4.2.0-beta3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.igniterealtime.smack</groupId>
+      <artifactId>smack-sasl-javax</artifactId>
+      <version>4.2.0-beta3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.igniterealtime.smack</groupId>
+      <artifactId>smack-tcp</artifactId>
+      <version>4.2.0-beta3</version>
+    </dependency>
+
     <!-- org.jitsi -->
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>jitsi-protocol</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>jitsi-protocol-media</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.xmpp</groupId>
-      <artifactId>jnsapi</artifactId>
     </dependency>
     <dependency>
       <groupId>org.osgi</groupId>

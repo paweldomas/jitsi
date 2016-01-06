@@ -31,7 +31,6 @@ import org.xmlpull.v1.*;
  */
 public class ThumbnailIQ
     extends IQ
-    implements IQProvider
 {
     /**
      * The names XMPP space that the thumbnail elements belong to.
@@ -105,33 +104,6 @@ public class ThumbnailIQ
 
         this.data = data;
         this.mimeType = mimeType;
-    }
-
-    /**
-     * Parses the given <tt>XmlPullParser</tt> into a ThumbnailIQ packet and
-     * returns it.
-     * @see IQProvider#parseIQ(XmlPullParser)
-     */
-    public IQ parseIQ(XmlPullParser parser) throws Exception
-    {
-        String elementName = parser.getName();
-        String namespace = parser.getNamespace();
-
-        if (elementName.equals(ELEMENT_NAME)
-            && namespace.equals(NAMESPACE))
-        {
-            this.cid = parser.getAttributeValue("", CID);
-            this.mimeType = parser.getAttributeValue("", TYPE);
-        }
-
-        int eventType = parser.next();
-
-        if (eventType == XmlPullParser.TEXT)
-        {
-            this.data = Base64.decode(parser.getText());
-        }
-
-        return this;
     }
 
     /**

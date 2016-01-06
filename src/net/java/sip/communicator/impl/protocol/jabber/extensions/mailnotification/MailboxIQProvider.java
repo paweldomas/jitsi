@@ -33,7 +33,7 @@ import org.xmlpull.v1.*;
  * @author Alain Knaebel
  */
 public class MailboxIQProvider
-        implements IQProvider
+    extends IQProvider
 {
     /**
      * Logger for this class

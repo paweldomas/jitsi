@@ -28,7 +28,7 @@ import org.xmlpull.v1.*;
  *
  * @author Emil Ivov
  */
-public class CapsProvider implements PacketExtensionProvider
+public class CapsProvider extends ExtensionElementProvider
 {
 
     /**

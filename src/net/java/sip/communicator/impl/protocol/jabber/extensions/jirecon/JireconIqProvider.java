@@ -28,7 +28,7 @@ import org.xmlpull.v1.*;
  * @author Pawel Domas
  */
 public class JireconIqProvider
-    implements IQProvider
+    extends IQProvider
 {
     /**
      * Name space of Jirecon packet extension.

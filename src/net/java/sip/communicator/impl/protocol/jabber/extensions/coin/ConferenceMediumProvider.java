@@ -27,7 +27,7 @@ import org.xmlpull.v1.*;
  * @author Sebastien Vincent
  */
 public class ConferenceMediumProvider
-    implements PacketExtensionProvider
+    extends ExtensionElementProvider
 {
     /**
      * Parses a ConferenceMedium extension sub-packet and creates a {@link

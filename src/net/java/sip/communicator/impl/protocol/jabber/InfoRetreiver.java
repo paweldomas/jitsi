@@ -17,6 +17,7 @@
  */
 package net.java.sip.communicator.impl.protocol.jabber;
 
+import java.io.IOException;
 import java.lang.reflect.*;
 import java.net.*;
 import java.text.*;
@@ -29,7 +30,9 @@ import org.apache.commons.lang3.*;
 import org.jivesoftware.smack.*;
 import org.jivesoftware.smack.filter.*;
 import org.jivesoftware.smack.packet.*;
-import org.jivesoftware.smackx.packet.*;
+import org.jivesoftware.smackx.vcardtemp.VCardManager;
+import org.jivesoftware.smackx.vcardtemp.packet.VCard;
+import org.jxmpp.jid.impl.JidCreate;
 
 /**
  * Handles and retrieves all info of our contacts or our account info
@@ -161,8 +164,9 @@ public class InfoRetreiver
             // if there is no value or is equals to the default one
             // load vcard using smack load method
             if(vcardTimeoutReply == -1
-               || vcardTimeoutReply == SmackConfiguration.getPacketReplyTimeout())
-                card.load(connection, contactAddress);
+               || vcardTimeoutReply == connection.getPacketReplyTimeout())
+                VCardManager.getInstanceFor(connection).loadVCard(
+                    JidCreate.entityBareFrom(contactAddress));
             else
                 load(card, connection, contactAddress, vcardTimeoutReply);
 
@@ -396,7 +400,7 @@ public class InfoRetreiver
      */
     String checkForFullName(VCard card)
     {
-        String vcardXml = card.toXML();
+        String vcardXml = card.toXML().toString();
 
         int indexOpen = vcardXml.indexOf(TAG_FN_OPEN);
 
@@ -420,39 +424,37 @@ public class InfoRetreiver
      * @param connection XMPP connection
      * @param user the user
      * @param timeout timeout in second
-     * @throws XMPPException if something went wrong during VCard loading
+     * @throws IOException if something went wrong during VCard loading
      */
     public void load(VCard vcard,
-                     Connection connection,
+                     XMPPConnection connection,
                      String user,
                      long timeout)
-        throws XMPPException
+        throws IOException
     {
-        vcard.setTo(user);
+        vcard.setTo(JidCreate.from(user));
 
-        vcard.setType(IQ.Type.GET);
-        PacketCollector collector = connection.createPacketCollector(
-                new PacketIDFilter(vcard.getPacketID()));
-        connection.sendPacket(vcard);
+        vcard.setType(IQ.Type.get);
 
         VCard result = null;
         try
         {
-            result = (VCard) collector.nextResult(timeout);
+            result = connection.createPacketCollectorAndSend(vcard)
+                .nextResult(timeout);
 
             if (result == null)
             {
                 String errorMessage = "Timeout getting VCard information";
-                throw new XMPPException(errorMessage, new XMPPError(
-                        XMPPError.Condition.request_timeout, errorMessage));
+                throw new IOException(errorMessage);
             }
 
             if (result.getError() != null)
             {
-                throw new XMPPException(result.getError());
+                throw new IOException(result.getError().toString());
             }
         }
-        catch (ClassCastException e)
+        catch (ClassCastException
+                | InterruptedException | SmackException.NotConnectedException e)
         {
             logger.error("No vcard for " + user);
         }

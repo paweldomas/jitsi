@@ -27,7 +27,7 @@ import org.xmlpull.v1.*;
  * @author Sebastien Vincent
  */
 public class StunProvider
-    implements PacketExtensionProvider
+    extends ExtensionElementProvider
 {
     /**
      * Parses a users extension sub-packet and creates a {@link
@@ -61,8 +61,8 @@ public class StunProvider
             {
                 if(elementName.equals(ServerPacketExtension.ELEMENT_NAME))
                 {
-                    PacketExtensionProvider provider = (PacketExtensionProvider)
-                        ProviderManager.getInstance().getExtensionProvider(
+                    ExtensionElementProvider provider = (ExtensionElementProvider)
+                        ProviderManager.getExtensionProvider(
                                 ServerPacketExtension.ELEMENT_NAME,
                                 ServerPacketExtension.NAMESPACE);
                     PacketExtension childExtension =

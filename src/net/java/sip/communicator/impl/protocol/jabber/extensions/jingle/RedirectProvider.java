@@ -27,7 +27,7 @@ import org.xmlpull.v1.*;
  * @author Sebastien Vincent
  */
 public class RedirectProvider
-    implements PacketExtensionProvider
+    extends ExtensionElementProvider
 {
     /**
      * Parses a reason extension sub-packet and creates a {@link

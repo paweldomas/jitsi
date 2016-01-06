@@ -26,7 +26,7 @@ import org.xmlpull.v1.*;
  * @author Sebastien Vincent
  */
 public class DescriptionProvider
-    implements PacketExtensionProvider
+    extends ExtensionElementProvider
 {
     /**
      * Parses a description extension sub-packet and creates a {@link

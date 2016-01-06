@@ -23,14 +23,15 @@ import org.jitsi.service.packetlogging.*;
 import org.jivesoftware.smack.*;
 import org.jivesoftware.smack.packet.*;
 
+import java.net.Socket;
+
 /**
  * The jabber packet listener that logs the packets to the packet logging
  * service.
  * @author Damian Minkov
  */
 public class SmackPacketDebugger
-    implements PacketListener,
-               PacketInterceptor
+    implements StanzaListener
 {
     /**
      * The current jabber connection.
@@ -67,6 +68,17 @@ public class SmackPacketDebugger
     public void setConnection(XMPPConnection connection)
     {
         this.connection = connection;
+        connection.addAsyncStanzaListener(this, null);
+        connection.addPacketInterceptor(new StanzaListener()
+        {
+            @Override
+            public void processPacket(Stanza packet)
+                throws SmackException.NotConnectedException,
+                        InterruptedException
+            {
+                interceptPacket(packet);
+            }
+        }, null);
     }
 
     /**
@@ -79,20 +91,18 @@ public class SmackPacketDebugger
      *
      * @param packet the packet to is going to be sent to the server.
      */
-    public void interceptPacket(Packet packet)
+    public void interceptPacket(Stanza packet)
     {
         try
         {
             if(packetLogging.isLoggingEnabled(
                     PacketLoggingService.ProtocolName.JABBER)
-                && packet != null && connection.getSocket() != null)
+                && packet != null && getSocket() != null)
             {
                 if(remoteAddress == null)
                 {
-                    remoteAddress = connection.getSocket()
-                        .getInetAddress().getAddress();
-                    localAddress = connection.getSocket()
-                        .getLocalAddress().getAddress();
+                    remoteAddress = getSocket().getInetAddress().getAddress();
+                    localAddress = getSocket().getLocalAddress().getAddress();
                 }
 
                 byte[] packetBytes;
@@ -100,17 +110,17 @@ public class SmackPacketDebugger
                 if(packet instanceof Message)
                 {
                     packetBytes = cloneAnonyMessage(packet)
-                        .toXML().getBytes("UTF-8");
+                        .toXML().toString().getBytes("UTF-8");
                 }
                 else
                 {
-                    packetBytes = packet.toXML().getBytes("UTF-8");
+                    packetBytes = packet.toXML().toString().getBytes("UTF-8");
                 }
 
                 packetLogging.logPacket(
                         PacketLoggingService.ProtocolName.JABBER,
                         localAddress,
-                        connection.getSocket().getLocalPort(),
+                        getSocket().getLocalPort(),
                         remoteAddress,
                         connection.getPort(),
                         PacketLoggingService.TransportName.TCP,
@@ -130,7 +140,7 @@ public class SmackPacketDebugger
      * @param packet
      * @return
      */
-    private Message cloneAnonyMessage(Packet packet)
+    private Message cloneAnonyMessage(Stanza packet)
     {
         Message oldMsg = (Message)packet;
 
@@ -148,11 +158,11 @@ public class SmackPacketDebugger
         newMsg.setFrom(packet.getFrom());
 
         // we don't modify them, just use existing
-        for(PacketExtension pex : packet.getExtensions())
+        for(ExtensionElement pex : packet.getExtensions())
             newMsg.addExtension(pex);
 
-        for(String propName : packet.getPropertyNames())
-            newMsg.setProperty(propName, packet.getProperty(propName));
+//        for(String propName : packet.getPropertyNames())
+//            newMsg.setProperty(propName, packet.getProperty(propName));
 
         newMsg.setError(packet.getError());
 
@@ -192,24 +202,24 @@ public class SmackPacketDebugger
      *
      * @param packet the packet to process.
      */
-    public void processPacket(Packet packet)
+    public void processPacket(Stanza packet)
     {
         try
         {
             if(packetLogging.isLoggingEnabled(
                     PacketLoggingService.ProtocolName.JABBER)
-                && packet != null && connection.getSocket() != null)
+                && packet != null && getSocket() != null)
             {
                 byte[] packetBytes;
 
                 if(packet instanceof Message)
                 {
                     packetBytes = cloneAnonyMessage(packet)
-                        .toXML().getBytes("UTF-8");
+                        .toXML().toString().getBytes("UTF-8");
                 }
                 else
                 {
-                    packetBytes = packet.toXML().getBytes("UTF-8");
+                    packetBytes = packet.toXML().toString().getBytes("UTF-8");
                 }
 
                 packetLogging.logPacket(
@@ -217,7 +227,7 @@ public class SmackPacketDebugger
                     remoteAddress,
                     connection.getPort(),
                     localAddress,
-                    connection.getSocket().getLocalPort(),
+                    getSocket().getLocalPort(),
                     PacketLoggingService.TransportName.TCP,
                     false,
                     packetBytes
@@ -228,5 +238,10 @@ public class SmackPacketDebugger
         {
             t.printStackTrace();
         }
+    }
+
+    public Socket getSocket()
+    {
+        return null;
     }
 }

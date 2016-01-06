@@ -27,7 +27,7 @@ import org.xmlpull.v1.*;
  * @author Damian Minkov
  */
 public class NotificationEventIQProvider
-    implements IQProvider
+    extends IQProvider
 {
     /**
      * Parse the IQ sub-document and create an IQ instance. Each IQ must have a

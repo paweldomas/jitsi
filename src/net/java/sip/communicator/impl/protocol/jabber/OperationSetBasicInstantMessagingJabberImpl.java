@@ -34,7 +34,7 @@ import org.jivesoftware.smack.packet.*;
 import org.jivesoftware.smack.provider.*;
 import org.jivesoftware.smack.util.*;
 import org.jivesoftware.smackx.*;
-import org.jivesoftware.smackx.packet.*;
+
 
 /**
  * A straightforward implementation of the basic instant messaging operation

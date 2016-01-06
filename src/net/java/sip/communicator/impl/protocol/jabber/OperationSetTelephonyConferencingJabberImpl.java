@@ -32,7 +32,6 @@ import org.jivesoftware.smack.filter.*;
 import org.jivesoftware.smack.packet.*;
 import org.jivesoftware.smack.packet.IQ.Type;
 import org.jivesoftware.smack.util.*;
-import org.jivesoftware.smackx.packet.*;
 
 /**
  * Implements <tt>OperationSetTelephonyConferencing</tt> for Jabber.

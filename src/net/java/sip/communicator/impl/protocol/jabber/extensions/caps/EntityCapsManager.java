@@ -32,10 +32,15 @@ import org.jivesoftware.smack.*;
 import org.jivesoftware.smack.filter.*;
 import org.jivesoftware.smack.packet.*;
 import org.jivesoftware.smack.provider.*;
-import org.jivesoftware.smack.util.Base64;
+import org.jivesoftware.smack.util.stringencoder.Base64;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.*;
-import org.jivesoftware.smackx.packet.*;
+import org.jivesoftware.smackx.disco.packet.*;
+
+import org.jivesoftware.smackx.xdata.FormField;
+import org.jivesoftware.smackx.xdata.packet.DataForm;
+import org.jxmpp.jid.Jid;
+import org.jxmpp.util.XmppStringUtils;
 import org.osgi.framework.*;
 import org.xmlpull.mxp1.*;
 import org.xmlpull.v1.*;
@@ -130,7 +135,7 @@ public class EntityCapsManager
 
     static
     {
-        ProviderManager.getInstance().addExtensionProvider(
+        ProviderManager.addExtensionProvider(
                 CapsPacketExtension.ELEMENT_NAME,
                 CapsPacketExtension.NAMESPACE,
                 new CapsProvider());
@@ -169,7 +174,7 @@ public class EntityCapsManager
              */
             if ((oldInfo == null) || !oldInfo.equals(info))
             {
-                String xml = info.getChildElementXML();
+                String xml = info.getChildElementXML().toString();
 
                 if ((xml != null) && (xml.length() != 0))
                 {
@@ -243,7 +248,7 @@ public class EntityCapsManager
         if ((user != null) && (node != null) && (hash != null) && (ver != null))
         {
             Caps caps = userCaps.get(user);
-            String bareJid=StringUtils.parseBareAddress(user);
+            String bareJid = XmppStringUtils.parseBareJid(user);
 
             if ((caps == null)
                     || !caps.node.equals(node)
@@ -308,16 +313,14 @@ public class EntityCapsManager
     {
         Caps caps = null;
         String lastRemovedJid = null;
-        String bareJid=StringUtils.parseBareAddress(
-            contact.getAddress());
+        String bareJid = XmppStringUtils.parseBareJid(contact.getAddress());
 
         Iterator<String> iter = userCaps.keySet().iterator();
         while(iter.hasNext())
         {
             String jid = iter.next();
 
-            if(StringUtils.parseBareAddress(jid).equals(
-                contact.getAddress()))
+            if(XmppStringUtils.parseBareJid(jid).equals(contact.getAddress()))
             {
                 caps = userCaps.get(jid);
                 lastRemovedJid = jid;
@@ -357,7 +360,7 @@ public class EntityCapsManager
     public void removeUserCapsNode(String user)
     {
         Caps caps = userCaps.remove(user);
-        String bareJid=StringUtils.parseBareAddress(user);
+        String bareJid = XmppStringUtils.parseBareJid(user);
 
         // Fire userCapsNodeRemoved.
         if (caps != null)
@@ -418,7 +421,7 @@ public class EntityCapsManager
     /**
      * Gets the full Jids (with resources) as Strings.
      *
-     * @param the bare Jid
+     * @param bareJid the bare Jid
      * @return the full Jids as an ArrayList <tt>user</tt>
      */
     public ArrayList<String> getFullJidsByBareJid(String bareJid)
@@ -426,7 +429,7 @@ public class EntityCapsManager
         ArrayList<String> jids = new ArrayList<String>();
         for(String jid: userCaps.keySet())
         {
-            if(bareJid.equals(StringUtils.parseBareAddress(jid))){
+            if(bareJid.equals(XmppStringUtils.parseBareJid(jid))){
                 jids.add(jid);
             }
         }
@@ -505,7 +508,7 @@ public class EntityCapsManager
                 {
                     IQProvider discoverInfoProvider
                         = (IQProvider)
-                            ProviderManager.getInstance().getIQProvider(
+                            ProviderManager.getIQProvider(
                                     "query",
                                     "http://jabber.org/protocol/disco#info");
 
@@ -537,7 +540,7 @@ public class EntityCapsManager
                             {
                                 discoverInfo
                                     = (DiscoverInfo)
-                                        discoverInfoProvider.parseIQ(parser);
+                                        discoverInfoProvider.parse(parser);
                             }
                             catch (Exception ex)
                             {
@@ -580,9 +583,9 @@ public class EntityCapsManager
      */
     private static void cleanupDiscoverInfo(DiscoverInfo info)
     {
-        info.setFrom(null);
-        info.setTo(null);
-        info.setPacketID(null);
+        info.setFrom((Jid)null);
+        info.setTo((Jid)null);
+        info.setStanzaId(null);
     }
 
     /**
@@ -635,9 +638,9 @@ public class EntityCapsManager
      */
     public void addPacketListener(XMPPConnection connection)
     {
-        PacketFilter filter = new PacketTypeFilter(Presence.class);
+        StanzaFilter filter= new StanzaTypeFilter(Presence.class);
 
-        connection.addPacketListener(new CapsPacketListener(), filter);
+        connection.addAsyncStanzaListener(new CapsPacketListener(), filter);
     }
 
     /**
@@ -713,13 +716,18 @@ public class EntityCapsManager
             MessageDigest md = MessageDigest.getInstance(hashAlgorithm);
             byte[] digest = md.digest(capsString.getBytes());
 
-            return Base64.encodeBytes(digest);
+            return new String(Base64.encode(digest), "UTF-8");
         }
         catch (NoSuchAlgorithmException nsae)
         {
             logger.error(
                     "Unsupported XEP-0115: Entity Capabilities hash algorithm: "
                         + hashAlgorithm);
+            return null;
+        }
+        catch (UnsupportedEncodingException e)
+        {
+            logger.error("Error encoding base64 bytes");
             return null;
         }
     }
@@ -763,7 +771,8 @@ public class EntityCapsManager
 
         // Add identities
         {
-            Iterator<DiscoverInfo.Identity> identities = discoverInfo.getIdentities();
+            Iterator<DiscoverInfo.Identity> identities
+                = discoverInfo.getIdentities().iterator();
             SortedSet<DiscoverInfo.Identity> is
                 = new TreeSet<DiscoverInfo.Identity>(
                         new Comparator<DiscoverInfo.Identity>()
@@ -826,7 +835,7 @@ public class EntityCapsManager
         }
 
         DataForm extendedInfo
-            = (DataForm) discoverInfo.getExtension("x", "jabber:x:data");
+            = discoverInfo.getExtension("x", "jabber:x:data");
 
         if (extendedInfo != null)
         {
@@ -847,7 +856,8 @@ public class EntityCapsManager
 
                 FormField formType = null;
 
-                for (Iterator<FormField> fieldsIter = extendedInfo.getFields();
+                for (Iterator<FormField> fieldsIter
+                     = extendedInfo.getFields().iterator();
                      fieldsIter.hasNext();)
                 {
                     FormField f = fieldsIter.next();
@@ -859,13 +869,14 @@ public class EntityCapsManager
 
                 // Add FORM_TYPE values
                 if (formType != null)
-                    formFieldValuesToCaps(formType.getValues(), bldr);
+                    formFieldValuesToCaps(
+                        formType.getValues().iterator(), bldr);
 
                 // Add the other values
                 for (FormField f : fs)
                 {
                     bldr.append(f.getVariable()).append('<');
-                    formFieldValuesToCaps(f.getValues(), bldr);
+                    formFieldValuesToCaps(f.getValues().iterator(), bldr);
                 }
             }
         }
@@ -923,18 +934,18 @@ public class EntityCapsManager
     }
 
     /**
-     * The {@link PacketListener} that will be registering incoming caps.
+     * The {@link StanzaListener} that will be registering incoming caps.
      */
     private class CapsPacketListener
-        implements PacketListener
+        implements StanzaListener
     {
         /**
          * Handles incoming presence packets and maps jids to node#ver strings.
          *
          * @param packet the incoming presence <tt>Packet</tt> to be handled
-         * @see PacketListener#processPacket(Packet)
+         * @see StanzaListener#processPacket(Stanza)
          */
-        public void processPacket(Packet packet)
+        public void processPacket(Stanza packet)
         {
             // Check it the packet indicates  that the user is online. We
             // will use this information to decide if we're going to send
@@ -971,13 +982,13 @@ public class EntityCapsManager
                     hash = "";
 
                 addUserCapsNode(
-                        packet.getFrom(),
+                        packet.getFrom().toString(),
                         ext.getNode(), hash, ext.getVersion(),
                         ext.getExtensions(), online);
             }
             else if (!online)
             {
-                removeUserCapsNode(packet.getFrom());
+                removeUserCapsNode(packet.getFrom().toString());
             }
         }
     }

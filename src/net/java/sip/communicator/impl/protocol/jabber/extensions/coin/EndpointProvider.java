@@ -29,7 +29,7 @@ import org.xmlpull.v1.*;
  * @author Sebastien Vincent
  */
 public class EndpointProvider
-    implements PacketExtensionProvider
+    extends ExtensionElementProvider
 {
     /**
      * Parses a endpoint extension sub-packet and creates a {@link
@@ -100,7 +100,7 @@ public class EndpointProvider
                 else if(elementName.equals(
                         CallInfoPacketExtension.ELEMENT_NAME))
                 {
-                    PacketExtensionProvider provider
+                    ExtensionElementProvider provider
                         = new DefaultPacketExtensionProvider<
                         CallInfoPacketExtension>(CallInfoPacketExtension.class);
                     PacketExtension childExtension = provider.parseExtension(
@@ -109,7 +109,7 @@ public class EndpointProvider
                 }
                 else if(elementName.equals(MediaPacketExtension.ELEMENT_NAME))
                 {
-                    PacketExtensionProvider provider
+                    ExtensionElementProvider provider
                         = new MediaProvider();
                     PacketExtension childExtension = provider.parseExtension(
                             parser);

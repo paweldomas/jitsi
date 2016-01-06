@@ -25,6 +25,7 @@ import net.java.sip.communicator.util.*;
 import org.jivesoftware.smack.*;
 import org.jivesoftware.smackx.*;
 import org.jivesoftware.smackx.muc.*;
+import org.jivesoftware.smackx.xdata.*;
 
 /**
  * The Jabber implementation of the <tt>ChatRoomConfigurationForm</tt>

@@ -28,7 +28,7 @@ import org.xmlpull.v1.*;
  * @author Damian Minkov
  */
 public class KeepAliveEventProvider
-    implements IQProvider
+    extends IQProvider
 {
     /**
      * Creates a new KeepAliveEventProvider.

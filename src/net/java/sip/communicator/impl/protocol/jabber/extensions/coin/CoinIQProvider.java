@@ -29,18 +29,18 @@ import org.xmlpull.v1.*;
  * @author Sebastien Vincent
  */
 public class CoinIQProvider
-    implements IQProvider
+    extends IQProvider
 {
     /**
      * Provider for description packet extension.
      */
-    private final PacketExtensionProvider descriptionProvider = new
+    private final ExtensionElementProvider descriptionProvider = new
         DescriptionProvider();
 
     /**
      * Provider for users packet extension.
      */
-    private final PacketExtensionProvider usersProvider = new UsersProvider();
+    private final ExtensionElementProvider usersProvider = new UsersProvider();
 
     /**
      * Provider for state packet extension.

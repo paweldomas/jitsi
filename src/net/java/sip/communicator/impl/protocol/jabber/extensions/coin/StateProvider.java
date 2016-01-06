@@ -26,7 +26,7 @@ import org.xmlpull.v1.*;
  * @author Sebastien Vincent
  */
 public class StateProvider
-    implements PacketExtensionProvider
+    extends ExtensionElementProvider
 {
     /**
      * Parses a state extension sub-packet and creates a {@link

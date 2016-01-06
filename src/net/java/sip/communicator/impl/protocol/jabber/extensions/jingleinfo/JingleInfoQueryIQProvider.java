@@ -29,18 +29,18 @@ import org.xmlpull.v1.*;
  * @author Sebastien Vincent
  */
 public class JingleInfoQueryIQProvider
-    implements IQProvider
+    extends IQProvider
 {
     /**
      * STUN packet extension provider.
      */
-    private final PacketExtensionProvider stunProvider =
+    private final ExtensionElementProvider stunProvider =
         new StunProvider();
 
     /**
      * Relay packet extension provider.
      */
-    private final PacketExtensionProvider relayProvider =
+    private final ExtensionElementProvider relayProvider =
         new RelayProvider();
 
     /**

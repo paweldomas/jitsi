@@ -34,7 +34,7 @@ import org.jitsi.service.neomedia.format.*;
 import org.jivesoftware.smack.*;
 import org.jivesoftware.smack.filter.*;
 import org.jivesoftware.smack.packet.*;
-import org.jivesoftware.smackx.packet.*;
+
 
 /**
  * Implements all desktop sharing server-side related functions for Jabber
@@ -368,7 +368,7 @@ public class OperationSetDesktopSharingServerJabberImpl
             RegistrationStateChangeEvent evt,
             PacketListener packetListener,
             PacketFilter packetFilter,
-            Connection connection)
+            XMPPConnection connection)
     {
         if(connection == null)
             return;

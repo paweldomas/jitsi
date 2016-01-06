@@ -20,7 +20,7 @@ package net.java.sip.communicator.impl.protocol.jabber;
 import net.java.sip.communicator.service.protocol.*;
 import net.java.sip.communicator.util.*;
 import org.jivesoftware.smack.*;
-import org.jivesoftware.smackx.packet.*;
+
 
 /**
  * A jabber implementation of the password change operation set.

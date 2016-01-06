@@ -669,7 +669,7 @@ public class OperationSetMultiUserChatJabberImpl
          * @param password the password to use when joining the room.
          * @param message the message used by the inviter to send the invitation.
          */
-        public void invitationReceived(Connection conn,
+        public void invitationReceived(XMPPConnection conn,
             String room, String inviter, String reason,
             String password, Message message)
         {

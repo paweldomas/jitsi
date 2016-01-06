@@ -29,7 +29,7 @@ import org.xmlpull.v1.*;
  * @see SctpMapExtension
  */
 public class SctpMapExtensionProvider
-    implements PacketExtensionProvider
+    extends ExtensionElementProvider
 {
 
     /**

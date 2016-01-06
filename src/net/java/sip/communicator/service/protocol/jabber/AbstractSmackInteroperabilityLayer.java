@@ -134,7 +134,7 @@ abstract public class AbstractSmackInteroperabilityLayer {
      * @return <tt>PacketExtensionProvider</tt> implementation to be 
      *                 used
      */
-    abstract public PacketExtensionProvider getExtensionProvider(
+    abstract public ExtensionElementProvider getExtensionProvider(
             String elementName, String namespace);
 
     

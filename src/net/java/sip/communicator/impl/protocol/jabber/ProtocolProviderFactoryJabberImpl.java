@@ -22,8 +22,11 @@ import java.util.*;
 import net.java.sip.communicator.service.protocol.*;
 
 import net.java.sip.communicator.service.protocol.jabber.*;
+import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.provider.*;
 import org.jivesoftware.smack.util.*;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.util.XmppStringUtils;
 import org.osgi.framework.*;
 
 /**
@@ -41,41 +44,45 @@ public class ProtocolProviderFactoryJabberImpl
     /**
      * Our provider manager instances.
      */
-    static ProviderManager providerManager = null;
+//    static ProviderManager providerManager = null;
 
     static
     {
-        try
-        {
-            
-            // Set the extension provider manager for classes that use 
-            // it directly
-            ProviderManager.setInstance(new ProviderManagerExt());
-            // Set the Smack interop implementation for the classes that need
-            // to support Smackv4 interoperation
-            AbstractSmackInteroperabilityLayer.setImplementationClass(
-                    SmackV3InteroperabilityLayer.class);
-        }
-        catch(Throwable t)
-        {
-            // once loaded if we try to set instance second time
-            // IllegalStateException is thrown
-        }
-        finally
-        {
-            providerManager = ProviderManager.getInstance();
-        }
-
-        // checks class names, not using instanceof
-        // tests do unloading and loading the protocol bundle and
-        // ProviderManagerExt class get loaded two times from different
-        // classloaders
-        if (!(providerManager.getClass().getName()
-                .equals(ProviderManagerExt.class.getName())))
-        {
-            throw new RuntimeException(
-                "ProviderManager set to the default one");
-        }
+        System.setProperty("smack.disabledClasses",
+            "org.jivesoftware.smack.ReconnectionManager");
+        // kicks off org.jivesoftware.smack.SmackInitialization
+        SmackConfiguration.getVersion();
+//        try
+//        {
+//
+//            // Set the extension provider manager for classes that use
+//            // it directly
+//            ProviderManager.setInstance(new ProviderManagerExt());
+//            // Set the Smack interop implementation for the classes that need
+//            // to support Smackv4 interoperation
+//            AbstractSmackInteroperabilityLayer.setImplementationClass(
+//                    SmackV3InteroperabilityLayer.class);
+//        }
+//        catch(Throwable t)
+//        {
+//            // once loaded if we try to set instance second time
+//            // IllegalStateException is thrown
+//        }
+//        finally
+//        {
+//            providerManager = ProviderManager.getInstance();
+//        }
+//
+//        // checks class names, not using instanceof
+//        // tests do unloading and loading the protocol bundle and
+//        // ProviderManagerExt class get loaded two times from different
+//        // classloaders
+//        if (!(providerManager.getClass().getName()
+//                .equals(ProviderManagerExt.class.getName())))
+//        {
+//            throw new RuntimeException(
+//                "ProviderManager set to the default one");
+//        }
     }
 
     /**
@@ -131,11 +138,10 @@ public class ProtocolProviderFactoryJabberImpl
         // if server address is null, we must extract it from userID
         if(accountProperties.get(SERVER_ADDRESS) == null)
         {
-            String serverAddress = StringUtils.parseServer(userIDStr);
+            String serverAddress = XmppStringUtils.parseDomain(userIDStr);
 
             if (serverAddress != null)
-                accountProperties.put(SERVER_ADDRESS,
-                                      StringUtils.parseServer(userIDStr));
+                accountProperties.put(SERVER_ADDRESS, serverAddress);
             else throw new IllegalArgumentException(
                 "Should specify a server for user name " + userIDStr + ".");
         }

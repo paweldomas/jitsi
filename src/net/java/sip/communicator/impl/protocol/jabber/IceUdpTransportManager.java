@@ -36,7 +36,7 @@ import org.ice4j.security.*;
 import org.jitsi.service.neomedia.*;
 import org.jitsi.util.*;
 import org.jivesoftware.smack.packet.*;
-import org.xmpp.jnodes.smack.*;
+//import org.xmpp.jnodes.smack.*;
 
 /**
  * A {@link TransportManagerJabberImpl} implementation that would use ICE for

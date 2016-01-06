@@ -26,7 +26,7 @@ import org.xmlpull.v1.*;
  * @author Sebastien Vincent
  */
 public class MediaProvider
-    implements PacketExtensionProvider
+    extends ExtensionElementProvider
 {
     /**
      * Parses a media extension sub-packet and creates a {@link

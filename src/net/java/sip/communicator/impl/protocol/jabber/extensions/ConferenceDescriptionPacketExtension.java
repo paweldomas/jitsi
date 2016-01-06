@@ -290,7 +290,7 @@ public class ConferenceDescriptionPacketExtension
      * Parses elements with the <tt>NAMESPACE</tt> namespace.
      */
     public static class Provider
-        implements PacketExtensionProvider
+        extends ExtensionElementProvider
     {
         /**
          * Creates a <tt>ConferenceDescriptionPacketExtension</tt> by parsing

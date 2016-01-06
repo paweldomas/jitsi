@@ -29,7 +29,7 @@ import org.xmlpull.v1.*;
  *
  * @author Emil Ivov
  */
-public class JingleIQProvider implements IQProvider
+public class JingleIQProvider extends IQProvider
 {
     /**
      * Creates a new instance of the <tt>JingleIQProvider</tt> and register all

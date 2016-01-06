@@ -23,17 +23,17 @@ import org.jivesoftware.smack.packet.*;
 import org.jivesoftware.smack.provider.*;
 import org.jivesoftware.smack.util.*;
 import org.jivesoftware.smackx.*;
-import org.jivesoftware.smackx.ReportedData.*;
+import org.jivesoftware.smackx.search.*;
 import org.xmlpull.v1.*;
 
 /**
  * Internal Search service Provider. It parses the <tt>UserSeachIQ</tt> packets.
  */
-public class UserSearchProvider implements IQProvider
+public class UserSearchProvider extends IQProvider
 {
     public IQ parseIQ(XmlPullParser parser) throws Exception
     {
-        UserSearchIQ search = new UserSearchIQ();
+        net.java.sip.communicator.impl.protocol.jabber.extensions.usersearch.UserSearchIQ search = new net.java.sip.communicator.impl.protocol.jabber.extensions.usersearch.UserSearchIQ();
         boolean done = false;
 
         while (!done)

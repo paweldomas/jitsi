@@ -27,7 +27,7 @@ import org.xmlpull.v1.*;
  * @author Sebastien Vincent
  */
 public class UserProvider
-    implements PacketExtensionProvider
+    extends ExtensionElementProvider
 {
     /**
      * Parses a User extension sub-packet and creates a {@link
@@ -83,7 +83,7 @@ public class UserProvider
                 else if(elementName.equals(
                         EndpointPacketExtension.ELEMENT_NAME))
                 {
-                    PacketExtensionProvider provider
+                    ExtensionElementProvider provider
                         = new EndpointProvider();
                     PacketExtension childExtension = provider.parseExtension(
                         parser);

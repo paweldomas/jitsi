@@ -22,8 +22,8 @@ import net.java.sip.communicator.impl.protocol.jabber.extensions.usersearch.*;
 import org.jivesoftware.smack.*;
 import org.jivesoftware.smack.filter.*;
 import org.jivesoftware.smack.packet.*;
-import org.jivesoftware.smackx.*;
-import org.jivesoftware.smackx.packet.*;
+import org.jivesoftware.smackx.search.*;
+
 
 import java.util.*;
 
@@ -37,7 +37,7 @@ public class UserSearchManager {
     /**
      * The object that represents the connection to the server.
      */
-    private Connection con;
+    private XMPPConnection con;
 
     /**
      * Last received search form from the server.
@@ -55,7 +55,7 @@ public class UserSearchManager {
      * @param con the Connection to use.
      * @param searchService the user search service name.
      */
-    public UserSearchManager(Connection con, String searchService) {
+    public UserSearchManager(XMPPConnection con, String searchService) {
         this.con = con;
         this.searchService = searchService;
     }

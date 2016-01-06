@@ -27,7 +27,7 @@ import org.xmlpull.v1.*;
  *
  * @author Emil Ivov
  */
-public class ReasonProvider implements PacketExtensionProvider
+public class ReasonProvider extends ExtensionElementProvider
 {
 
     /**

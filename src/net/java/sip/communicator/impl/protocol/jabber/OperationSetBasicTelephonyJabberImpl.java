@@ -32,8 +32,15 @@ import org.jivesoftware.smack.filter.*;
 import org.jivesoftware.smack.packet.*;
 import org.jivesoftware.smack.packet.IQ.Type;
 import org.jivesoftware.smack.provider.*;
+import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.util.*;
-import org.jivesoftware.smackx.packet.*;
+import org.jivesoftware.smack.packet.*;
+import org.jivesoftware.smackx.disco.packet.DiscoverInfo;
+import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.Jid;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.stringprep.XmppStringprepException;
+import org.jxmpp.util.XmppStringUtils;
 
 /**
  * Implements all call management logic and exports basic telephony support by
@@ -48,8 +55,8 @@ import org.jivesoftware.smackx.packet.*;
 public class OperationSetBasicTelephonyJabberImpl
    extends AbstractOperationSetBasicTelephony<ProtocolProviderServiceJabberImpl>
    implements RegistrationStateChangeListener,
-              PacketListener,
-              PacketFilter,
+              StanzaListener,
+              StanzaFilter,
               OperationSetSecureSDesTelephony,
               OperationSetSecureZrtpTelephony,
               OperationSetAdvancedTelephony<ProtocolProviderServiceJabberImpl>
@@ -107,7 +114,7 @@ public class OperationSetBasicTelephonyJabberImpl
 
         if (registrationState == RegistrationState.REGISTERING)
         {
-            ProviderManager.getInstance().addIQProvider(
+            ProviderManager.addIQProvider(
                     JingleIQ.ELEMENT_NAME,
                     JingleIQ.NAMESPACE,
                     new JingleIQProvider());
@@ -349,7 +356,8 @@ public class OperationSetBasicTelephonyJabberImpl
             String serviceName = null;
 
             if ((phoneSuffix == null) || (phoneSuffix.length() == 0))
-                serviceName = StringUtils.parseServer(accountID.getUserID());
+                serviceName
+                    = XmppStringUtils.parseDomain(accountID.getUserID());
             else
                 serviceName = phoneSuffix;
             calleeAddress = calleeAddress + "@" + serviceName;
@@ -372,9 +380,20 @@ public class OperationSetBasicTelephonyJabberImpl
             isPrivateMessagingContact
                 = mucOpSet.isPrivateMessagingContact(calleeAddress);
 
-        if((!getProtocolProvider().getConnection().getRoster().contains(
-            StringUtils.parseBareAddress(calleeAddress)) &&
-            !isPrivateMessagingContact) && !alwaysCallGtalk)
+        BareJid bareJid = null;
+        try
+        {
+            bareJid = JidCreate.bareFrom(calleeAddress);
+        }
+        catch (XmppStringprepException e)
+        {
+            logger.error("Cannot parse jid:" + bareJid);
+        }
+        if((bareJid != null
+                && !Roster.getInstanceFor(getProtocolProvider().getConnection())
+                    .contains(bareJid)
+                && !isPrivateMessagingContact)
+            && !alwaysCallGtalk)
         {
             throw new OperationFailedException(
                 calleeAddress + " does not belong to our contact list",
@@ -488,9 +507,19 @@ public class OperationSetBasicTelephonyJabberImpl
         PresenceStatus jabberStatus = null;
         String calleeURI = null;
 
+        BareJid bareJid = null;
+        try
+        {
+            bareJid = JidCreate.bareFrom(calleeAddress);
+        }
+        catch (XmppStringprepException e)
+        {
+            logger.error("Cannot parse jid:" + bareJid);
+            return null;
+        }
         Iterator<Presence> it
-            = getProtocolProvider().getConnection().getRoster().getPresences(
-                    calleeAddress);
+            = Roster.getInstanceFor(getProtocolProvider().getConnection())
+                .getPresences(bareJid).iterator();
 
         while(it.hasNext())
         {
@@ -499,7 +528,7 @@ public class OperationSetBasicTelephonyJabberImpl
                 = (presence.getPriority() == Integer.MIN_VALUE)
                     ? 0
                     : presence.getPriority();
-            calleeURI = presence.getFrom();
+            calleeURI = presence.getFrom().toString();
 
             try
             {
@@ -554,14 +583,22 @@ public class OperationSetBasicTelephonyJabberImpl
      */
     String getFullCalleeURI(String calleeAddress)
     {
+        BareJid bareJid = null;
+        try
+        {
+            bareJid = JidCreate.bareFrom(calleeAddress);
+        }
+        catch (XmppStringprepException e)
+        {
+            logger.error("Cannot parse jid:" + bareJid);
+            return null;
+        }
+
         return
             (calleeAddress.indexOf('/') > 0)
                 ? calleeAddress
-                : protocolProvider
-                    .getConnection()
-                        .getRoster()
-                            .getPresence(calleeAddress)
-                                .getFrom();
+                : Roster.getInstanceFor(protocolProvider.getConnection())
+                    .getPresence(bareJid).getFrom().toString();
     }
 
     /**
@@ -790,7 +827,7 @@ public class OperationSetBasicTelephonyJabberImpl
      * @param packet the packet to test.
      * @return true if and only if <tt>packet</tt> passes the filter.
      */
-    public boolean accept(Packet packet)
+    public boolean accept(Stanza packet)
     {
         // We handle JingleIQ and SessionIQ.
         if(!(packet instanceof JingleIQ))
@@ -810,10 +847,10 @@ public class OperationSetBasicTelephonyJabberImpl
 
                 if (error != null)
                 {
-                    String errorMessage = error.getMessage();
+                    String errorMessage = error.getConditionText();
 
                     logger.error(
-                            "Received an error: code=" + error.getCode()
+                            "Received an error: code=" + error.getCondition()
                                 + " message=" + errorMessage);
 
                     String message;
@@ -821,9 +858,9 @@ public class OperationSetBasicTelephonyJabberImpl
                     if (errorMessage == null)
                     {
                         Roster roster
-                            = getProtocolProvider().getConnection().getRoster();
-                        String packetFrom = packet.getFrom();
-
+                            = Roster.getInstanceFor(
+                                getProtocolProvider().getConnection());
+                        BareJid packetFrom = packet.getFrom().asBareJid();
                         message = "Service unavailable";
                         if(!roster.contains(packetFrom))
                         {
@@ -868,7 +905,7 @@ public class OperationSetBasicTelephonyJabberImpl
      *
      * @param packet the packet to process.
      */
-    public void processPacket(Packet packet)
+    public void processPacket(Stanza packet)
     {
         IQ iq = (IQ) packet;
 
@@ -880,11 +917,20 @@ public class OperationSetBasicTelephonyJabberImpl
          */
 
         //first ack all "set" requests.
-        if(iq.getType() == IQ.Type.SET)
+        if(iq.getType() == IQ.Type.set)
         {
             IQ ack = IQ.createResultIQ(iq);
 
-            protocolProvider.getConnection().sendPacket(ack);
+            try
+            {
+                protocolProvider.getConnection().sendStanza(ack);
+            }
+            catch (SmackException.NotConnectedException
+                    | InterruptedException e)
+            {
+                logger.error("Cannot send ack", e);
+                return;
+            }
         }
 
         try
@@ -932,7 +978,7 @@ public class OperationSetBasicTelephonyJabberImpl
             = activeCallsRepository.findCallPeer(jingleIQ.getSID());
         IQ.Type type = jingleIQ.getType();
 
-        if (type == Type.ERROR)
+        if (type == IQ.Type.error)
         {
             logger.error("Received error");
 
@@ -942,8 +988,8 @@ public class OperationSetBasicTelephonyJabberImpl
             if(error != null)
             {
                 String errorStr
-                    = "code=" + error.getCode()
-                        + " message=" + error.getMessage();
+                    = "code=" + error.getCondition()
+                        + " message=" + error.getConditionText();
 
                 message += "\n" + errorStr;
                 logger.error(" " + errorStr);
@@ -1065,7 +1111,8 @@ public class OperationSetBasicTelephonyJabberImpl
                         = (TransferPacketExtension) packetExtension;
 
                     if (transfer.getFrom() == null)
-                        transfer.setFrom(jingleIQ.getFrom());
+                        transfer.setFrom(
+                            jingleIQ.getFrom().toString());
 
                     try
                     {
